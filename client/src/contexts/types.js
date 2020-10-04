@@ -1,0 +1,14 @@
+export const LOGIN_SUCCESS = "LOGIN_SUCCESS"
+export const LOGIN_FAILED = "LOGIN_FAILED"
+
+export const OAUTH_LOGIN_SUCCESS = "OAUTH_LOGIN_SUCCESS"
+export const OAUTH_LOGIN_FAILED = "OAUTH_LOGIN_FAILED"
+
+export const REGISTER_SUCCESS = "REGISTER_SUCCESS"
+export const REGISTER_FAILED = "REGISTER_FAILED"
+
+export const LOGOUT = "LOGOUT"
+
+export const TEST = "TEST"
+
+export const SET_LOADING = "SET_LOADING"
