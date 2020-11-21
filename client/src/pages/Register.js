@@ -262,6 +262,6 @@ export default function Register()
             <Box mt={5}>
                 <Copyright />
             </Box>
-        </Container >
+        </Container>
     );
 }

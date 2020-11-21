@@ -19,8 +19,8 @@ const Navbar = () =>
         }
     }, [location])
     return (
-        <div className="navbar">
-            <div className="left">
+        <nav className="navbar">
+            <section className="left">
                 <Link to="/" >Home</Link>
                 <Link to="/about-me">About Me</Link>
                 <Link to="/contact">Contact</Link>
@@ -36,13 +36,13 @@ const Navbar = () =>
                         toggleSidenav(true)
                     }
                 }}></i>
-                <div className="sidenav">
+                <aside className="sidenav">
                     <Link to="/" >Home</Link>
                     <Link to="/about-me">About Me</Link>
                     <Link to="/contact">Contact</Link>
-                </div>
-            </div>
-            <div className="center">{iconLinks?.facebook &&
+                </aside>
+            </section>
+            <section className="center">{iconLinks?.facebook &&
                 <a href={iconLinks.facebook} target="_blank" rel="noopener noreferrer" className="link-icons">
                     <i className="fab fa-facebook" />
                 </a>
@@ -71,8 +71,8 @@ const Navbar = () =>
                     <a href={iconLinks.youtube} target="_blank" rel="noopener noreferrer" className="link-icons">
                         <i className="fab fa-youtube" />
                     </a>
-                }</div>
-            <div className="right">
+                }</section>
+            <section className="right">
                 {user === null ?
                     <Link to="/login">Login</Link> : <Fragment>
                         {user?.username ?
@@ -82,8 +82,8 @@ const Navbar = () =>
                             <i className="fas fa-user-circle" />
                         </a>
                     </Fragment>}
-            </div>
-        </div>
+            </section>
+        </nav>
     )
 }
 
