@@ -2,6 +2,7 @@ import React, { useContext, useEffect } from "react";
 import HotNews from "../components/HotNews";
 import MainPost from "../components/MainPost";
 import NewPost from "../components/NewPost";
+import SinglePost from "../components/SinglePost";
 import MainContext from "../contexts/main/mainContext";
 
 const Home = () => {
@@ -17,15 +18,12 @@ const Home = () => {
         ))}
       </section>
       <section className="center">
-        <NewPost />
-        {[1, 2, 3, 4].map((el, index) => (
-          <MainPost key={index} />
-        ))}
+        <SinglePost />
       </section>
       <section className="right">
-        {/* {[1, 2, 3, 4].map((el, index) => (
+        {[1, 2, 3, 4].map((el, index) => (
           <HotNews key={index} />
-        ))} */}
+        ))}
       </section>
     </div>
   );

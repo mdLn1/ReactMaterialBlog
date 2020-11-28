@@ -5,6 +5,7 @@ import axios from "axios";
 import AboutMe from "./pages/AboutMe";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
+import ViewPost from './pages/ViewPost'
 import Login from "./pages/Login";
 import EmailConfirmed from "./pages/EmailConfirmed";
 import Register from "./pages/Register";
@@ -48,6 +49,7 @@ const App = () => {
               <Route path="/register" component={Register} />
               <Route path="/reset-password/:hash" component={PasswordReset} />
               <Route path="/confirm-email/:hash" component={EmailConfirmed} />
+              <Route path="/post/:id" component={ViewPost} />
               <Route path="/" component={Home} />
             </Switch>
           </div>

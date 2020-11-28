@@ -71,7 +71,7 @@ const EditPost = ({ title, content, datePosted, author, pinned, cancelEditing, s
               }
             />
 
-            <Grid container spacing={4} id="new-post-submission">
+            <Grid container spacing={4} id="edit-post-submission">
               <Grid item xs={12} sm={6} md={6} lg={6}>
                 <Button
                   variant="contained"

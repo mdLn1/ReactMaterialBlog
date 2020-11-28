@@ -1,13 +1,12 @@
 import React, { Fragment, useState } from "react";
 import PropTypes from "prop-types";
 import ReactMarkdown from "react-markdown";
-import containsMDImage from "../utils/matchMDImagePattern";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import EditPost from "./EditPost";
-import { Link } from "react-router-dom";
+import CommentsSection from "./CommentsSection";
 import Tooltip from "@material-ui/core/Tooltip";
 
-const MainPost = ({
+const SinglePost = ({
   title,
   content,
   datePosted,
@@ -15,9 +14,7 @@ const MainPost = ({
   pinned,
   likes,
   noTotalComments,
-  id,
 }) => {
-  const [dropped, setDrop] = useState(false);
   const [pinApplied, setPin] = useState(pinned);
   const [isPostBeingEdited, toggleEditMode] = useState(false);
   const [isLiked, toggleLike] = useState(false);
@@ -47,7 +44,7 @@ const MainPost = ({
     />
   ) : (
     <article
-      className="main-post"
+      className="main-post single-post"
       onClick={() => {
         if (showPostActions) toggleShowActions(false);
       }}
@@ -86,42 +83,12 @@ const MainPost = ({
             </div>
           )}
         </span>
-
-        <h1>
-          {" "}
-          <Link to={`/post/${id}`}>{title}</Link>
-        </h1>
+        <h1>{title}</h1>
         <small>Posted on {datePosted}</small>
       </section>
       <hr />
       <section className="main-post-content">
-        {containsMDImage(content) || content.length > 600 ? (
-          dropped ? (
-            <Fragment>
-              <ReactMarkdown source={content} />
-              <div className="add-fade">
-                <i
-                  className="fas fa-chevron-up"
-                  onClick={() => setDrop(!dropped)}
-                ></i>
-              </div>
-            </Fragment>
-          ) : (
-            <Fragment>
-              <div className="markdown-limiter">
-                <ReactMarkdown source={content} />
-              </div>
-              <div className="remove-fade">
-                <i
-                  className="fas fa-chevron-down"
-                  onClick={() => setDrop(!dropped)}
-                ></i>
-              </div>
-            </Fragment>
-          )
-        ) : (
-          <ReactMarkdown source={content} />
-        )}
+        <ReactMarkdown source={content} />
       </section>
       <section className="main-post-footer">
         <span className="main-post-user-engagement">
@@ -141,11 +108,9 @@ const MainPost = ({
             </Tooltip>
           )}
           <span className="total-items-indicator">{likes}</span>
-          <Link to={`/post/${id}`}>
-            <Tooltip title="Comments" arrow interactive>
-              <i className="far fa-comment"></i>
-            </Tooltip>
-          </Link>
+          <Tooltip title="Comments" arrow interactive>
+            <i className="far fa-comment"></i>
+          </Tooltip>
           <span className="total-items-indicator">{noTotalComments}</span>
         </span>
         <Tooltip title="Share" arrow interactive>
@@ -158,25 +123,26 @@ const MainPost = ({
             ></i>
             {linkCopied && (
               <div className="dropleft">
-                <p>
-                  <i className="fas fa-link"></i>Link Copied!
-                </p>
+                <i className="fas fa-link"></i>Link Copied!
               </div>
             )}
           </span>
         </Tooltip>
       </section>
+      <section className="single-post-comments">
+        <CommentsSection />
+      </section>
     </article>
   );
 };
 
-MainPost.propTypes = {
+SinglePost.propTypes = {
   title: PropTypes.string.isRequired,
   content: PropTypes.string.isRequired,
   author: PropTypes.string.isRequired,
 };
 
-MainPost.defaultProps = {
+SinglePost.defaultProps = {
   title: "Title",
   content:
     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, ![image food](https://iso.500px.com/wp-content/uploads/2014/06/W4A2827-1-3000x2000.jpg) when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum",
@@ -185,7 +151,6 @@ MainPost.defaultProps = {
   pinned: false,
   likes: 12,
   noTotalComments: 1,
-  id: 1,
 };
 
-export default MainPost;
+export default SinglePost;
