@@ -80,6 +80,10 @@ const SinglePost = ({
                 <i className="fas fa-trash-alt delete"></i>
                 <span>Delete</span>
               </p>
+              <p>
+                <i className="far fa-flag"></i>
+                <span>Report</span>
+              </p>
             </div>
           )}
         </span>

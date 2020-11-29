@@ -1,7 +1,7 @@
 import React, { Fragment, useState } from "react";
 import PropTypes from "prop-types";
 import ReactMarkdown from "react-markdown";
-import containsMDImage from "../utils/matchMDImagePattern";
+import { containsMDImage } from "../utils/matchMDImagePattern";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import EditPost from "./EditPost";
 import { Link } from "react-router-dom";
@@ -82,6 +82,10 @@ const MainPost = ({
               <p>
                 <i className="fas fa-trash-alt delete"></i>
                 <span>Delete</span>
+              </p>
+              <p>
+                <i className="far fa-flag"></i>
+                <span>Report</span>
               </p>
             </div>
           )}

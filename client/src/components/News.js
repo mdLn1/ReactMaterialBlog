@@ -1,20 +1,22 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-const HotNews = ({ title }) => {
+const News = ({ title }) => {
   return (
     <article className="hot-news">
-      <b>{title}</b>
+      <div>
+        <b>{title}</b>
+      </div>
     </article>
   );
 };
 
-HotNews.propTypes = {
+News.propTypes = {
   title: PropTypes.string.isRequired,
 };
 
-HotNews.defaultProps = {
+News.defaultProps = {
   title: "Flash hot news",
 };
 
-export default HotNews;
+export default News;
