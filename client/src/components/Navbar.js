@@ -23,7 +23,6 @@ const Navbar = () =>
             <section className="left">
                 <Link to="/" >Home</Link>
                 <Link to="/about-me">About Me</Link>
-                <Link to="/contact">Contact</Link>
                 <i className="fas fa-bars" onClick={() =>
                 {
                     if (isSidenavShowing)
@@ -39,7 +38,6 @@ const Navbar = () =>
                 <aside className="sidenav">
                     <Link to="/" >Home</Link>
                     <Link to="/about-me">About Me</Link>
-                    <Link to="/contact">Contact</Link>
                 </aside>
             </section>
             <section className="center">{iconLinks?.facebook &&

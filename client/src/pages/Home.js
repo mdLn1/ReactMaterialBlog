@@ -1,6 +1,6 @@
 import React, { useContext, useEffect } from "react";
 import MainPost from "../components/MainPost";
-import NewPost from "../components/NewPost";
+import TopHomePage from "../components/TopHomePage";
 import SideContainer from "../components/SideContainer";
 import MainContext from "../contexts/main/mainContext";
 
@@ -12,7 +12,7 @@ const Home = () => {
   return (
     <div className="home-container">
       <section className="center">
-        <NewPost />
+        <TopHomePage />
         {[1, 2, 3, 4].map((el, index) => (
           <MainPost key={index} />
         ))}

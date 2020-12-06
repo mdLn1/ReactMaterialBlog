@@ -2,11 +2,11 @@ import React, { Fragment, useState } from "react";
 import PropTypes from "prop-types";
 import ReactMarkdown from "react-markdown";
 import { containsMDImage } from "../utils/matchMDImagePattern";
-import CssBaseline from "@material-ui/core/CssBaseline";
 import EditPost from "./EditPost";
 import { Link } from "react-router-dom";
 import Tooltip from "@material-ui/core/Tooltip";
-
+import MultipleOptionsMenu from "./MultipleOptionsMenu";
+import { secondary } from "../AppColors";
 const MainPost = ({
   title,
   content,
@@ -35,7 +35,7 @@ const MainPost = ({
     toggleShowActions(true);
     setTimeout(() => {
       toggleShowActions(false);
-    }, 7000);
+    }, 5000);
   }
 
   return isPostBeingEdited ? (
@@ -52,8 +52,6 @@ const MainPost = ({
         if (showPostActions) toggleShowActions(false);
       }}
     >
-      <CssBaseline />
-
       <section className="main-post-header">
         <span className="post-options">
           <Tooltip
@@ -66,7 +64,7 @@ const MainPost = ({
               onClick={() => setPin(!pinApplied)}
             ></i>
           </Tooltip>
-          <Tooltip title="Actions" arrow interactive>
+          {/* <Tooltip title="Actions" arrow interactive>
             <i
               className="fas fa-ellipsis-v"
               onClick={() => toggleActions()}
@@ -88,7 +86,28 @@ const MainPost = ({
                 <span>Report</span>
               </p>
             </div>
-          )}
+          )} */}
+          <MultipleOptionsMenu
+            options={[
+              {
+                fontAwesomeIcon: "fas fa-edit edit",
+                text: "Edit",
+                action: () => {
+                  toggleEditMode(false);
+                },
+              },
+              {
+                fontAwesomeIcon: "fas fa-trash-alt delete",
+                text: "Delete",
+                action: () => {},
+              },
+              {
+                fontAwesomeIcon: "fas fa-flag",
+                text: "Report",
+                action: () => {},
+              },
+            ]}
+          />
         </span>
 
         <h1>
@@ -152,23 +171,21 @@ const MainPost = ({
           </Link>
           <span className="total-items-indicator">{noTotalComments}</span>
         </span>
-        <Tooltip title="Share" arrow interactive>
-          <span className="main-post-social-shares">
-            <i
-              className="fas fa-share-alt"
-              onClick={() => {
-                copyLink();
-              }}
-            ></i>
-            {linkCopied && (
-              <div className="dropleft">
-                <p>
-                  <i className="fas fa-link"></i>Link Copied!
-                </p>
-              </div>
-            )}
-          </span>
-        </Tooltip>
+        <span className="main-post-social-shares">
+          <MultipleOptionsMenu
+            options={[
+              {
+                text: "Copy Link",
+                action: () => {
+                  copyLink();
+                },
+              },
+            ]}
+            tooltipTitle="Share"
+            iconStyle={{ color: secondary }}
+            iconClass="fas fa-share-alt"
+          />
+        </span>
       </section>
     </article>
   );

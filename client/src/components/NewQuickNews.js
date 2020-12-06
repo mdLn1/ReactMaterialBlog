@@ -15,6 +15,7 @@ import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker,
 } from "@material-ui/pickers";
+import CustomContainedButton from "./customizedElements/CustomContainedButton";
 
 import ValidationTextField from "./customizedElements/ValidationTextField";
 
@@ -51,7 +52,6 @@ const NewQuickNews = (props) => {
     >
       {isNewQuickNewsFormShown ? (
         <Container disableGutters>
-          <CssBaseline />
           <div className={classes.paper}>
             <Typography component="h3" variant="h5">
               Add News
@@ -88,7 +88,7 @@ const NewQuickNews = (props) => {
                   margin="normal"
                   id="date-picker-start-news"
                   label="Start displaying on"
-                  format="MM/dd/yyyy"
+                  format="dd/MM/yyyy"
                   fullWidth
                   required
                   KeyboardButtonProps={{
@@ -99,7 +99,7 @@ const NewQuickNews = (props) => {
                   margin="normal"
                   id="date-picker-end-news"
                   label="Final date to display"
-                  format="MM/dd/yyyy"
+                  format="dd/MM/yyyy"
                   fullWidth
                   required
                   KeyboardButtonProps={{
@@ -121,11 +121,11 @@ const NewQuickNews = (props) => {
 
               <Grid container spacing={2} id="news-submission">
                 <Grid item xs={12} sm={12} md={12} lg={12}>
-                  <Button
+                  <CustomContainedButton
                     variant="contained"
                     fullWidth
                     onClick={() => toggleAddNewsForm(false)}
-                    id="cancel-news-adding-button"
+                    color="error"
                   >
                     {" "}
                     Cancel{" "}
@@ -133,13 +133,13 @@ const NewQuickNews = (props) => {
                       className="fas fa-times-circle"
                       style={{ marginLeft: "15px" }}
                     />
-                  </Button>
+                  </CustomContainedButton>
                 </Grid>
                 <Grid item xs={12} sm={12} md={12} lg={12}>
-                  <Button
+                  <CustomContainedButton
                     fullWidth
                     variant="contained"
-                    color="primary"
+                    color="success"
                     onClick={() => toggleAddNewsForm(false)}
                   >
                     {" "}
@@ -148,14 +148,14 @@ const NewQuickNews = (props) => {
                       className="fas fa-check-circle"
                       style={{ marginLeft: "15px" }}
                     />
-                  </Button>
+                  </CustomContainedButton>
                 </Grid>
               </Grid>
             </form>
           </div>
         </Container>
       ) : (
-        <div id="new-post-button">
+        <div id="new-news-button">
           <Button
             color="primary"
             variant="contained"

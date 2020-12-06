@@ -40,7 +40,6 @@ const EditPost = ({ title, content, datePosted, author, pinned, cancelEditing, s
   return (
     <div className="edit-post">
       <Container component="main">
-        <CssBaseline />
         <div className={classes.paper}>
           <form
             className={classes.form}

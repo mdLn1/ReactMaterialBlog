@@ -1,6 +1,7 @@
 import React, { Fragment, useState } from "react";
 import PropTypes from "prop-types";
 import Tooltip from "@material-ui/core/Tooltip";
+import MultipleOptionsMenu from "./MultipleOptionsMenu";
 
 const Comment = ({ author, datePosted, content }) => {
   const [showCommentActions, toggleShowActions] = useState(false);
@@ -17,7 +18,7 @@ const Comment = ({ author, datePosted, content }) => {
           <span className="author">{author}</span>
           <span className="date-posted">{datePosted}</span>
           <span className="comment-options">
-            <Tooltip title="Actions" arrow interactive>
+            {/* <Tooltip title="Actions" arrow interactive>
               <i
                 className="fas fa-ellipsis-v"
                 onClick={() => toggleActions()}
@@ -39,7 +40,27 @@ const Comment = ({ author, datePosted, content }) => {
                   <span>Report</span>
                 </p>
               </div>
-            )}
+            )} */}
+            <MultipleOptionsMenu
+              iconStyle={{ fontSize: ".8rem" }}
+              options={[
+                {
+                  fontAwesomeIcon: "fas fa-edit edit",
+                  text: "Edit",
+                  action: () => {},
+                },
+                {
+                  fontAwesomeIcon: "fas fa-trash-alt delete",
+                  text: "Delete",
+                  action: () => {},
+                },
+                {
+                  fontAwesomeIcon: "fas fa-flag",
+                  text: "Report",
+                  action: () => {},
+                },
+              ]}
+            />
           </span>
         </div>
         <div className="comment-content">{content}</div>

@@ -5,6 +5,8 @@ import CssBaseline from "@material-ui/core/CssBaseline";
 import EditPost from "./EditPost";
 import CommentsSection from "./CommentsSection";
 import Tooltip from "@material-ui/core/Tooltip";
+import MultipleOptionsMenu from "./MultipleOptionsMenu";
+import { secondary } from "../AppColors";
 
 const SinglePost = ({
   title,
@@ -49,8 +51,6 @@ const SinglePost = ({
         if (showPostActions) toggleShowActions(false);
       }}
     >
-      <CssBaseline />
-
       <section className="main-post-header">
         <span className="post-options">
           <Tooltip
@@ -63,7 +63,7 @@ const SinglePost = ({
               onClick={() => setPin(!pinApplied)}
             ></i>
           </Tooltip>
-          <Tooltip title="Actions" arrow interactive>
+          {/* <Tooltip title="Actions" arrow interactive>
             <i
               className="fas fa-ellipsis-v"
               onClick={() => toggleActions()}
@@ -85,7 +85,28 @@ const SinglePost = ({
                 <span>Report</span>
               </p>
             </div>
-          )}
+          )} */}
+          <MultipleOptionsMenu
+            options={[
+              {
+                fontAwesomeIcon: "fas fa-edit edit",
+                text: "Edit",
+                action: () => {
+                  toggleEditMode(!isPostBeingEdited);
+                },
+              },
+              {
+                fontAwesomeIcon: "fas fa-trash-alt delete",
+                text: "Delete",
+                action: () => {},
+              },
+              {
+                fontAwesomeIcon: "fas fa-flag",
+                text: "Report",
+                action: () => {},
+              },
+            ]}
+          />
         </span>
         <h1>{title}</h1>
         <small>Posted on {datePosted}</small>
@@ -117,21 +138,21 @@ const SinglePost = ({
           </Tooltip>
           <span className="total-items-indicator">{noTotalComments}</span>
         </span>
-        <Tooltip title="Share" arrow interactive>
-          <span className="main-post-social-shares">
-            <i
-              className="fas fa-share-alt"
-              onClick={() => {
-                copyLink();
-              }}
-            ></i>
-            {linkCopied && (
-              <div className="dropleft">
-                <i className="fas fa-link"></i>Link Copied!
-              </div>
-            )}
-          </span>
-        </Tooltip>
+        <span className="main-post-social-shares">
+          <MultipleOptionsMenu
+            options={[
+              {
+                text: "Copy Link",
+                action: () => {
+                  copyLink();
+                },
+              },
+            ]}
+            tooltipTitle="Share"
+            iconStyle={{ color: secondary }}
+            iconClass="fas fa-share-alt"
+          />
+        </span>
       </section>
       <section className="single-post-comments">
         <CommentsSection />
