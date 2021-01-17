@@ -15,9 +15,28 @@ let userSchema = new Schema({
     passwordResetRequested: { type: Boolean, default: false },
     passwordResetConfirmationHash: { type: String },
     passwordResetExpiryDate: { type: Date },
+    lastTimePasswordChanged: { type: Date },
     emailConfirmationHash: { type: String },
     emailConfirmed: { type: Boolean, default: false },
-    registrationDate: { type: Date, default: Date.now }
+    registrationDate: { type: Date, default: Date.now },
+    commentsReported: [
+		{
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Comments'
+		}
+    ],
+    postsReported: [
+		{
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Posts'
+		}
+	],
+    posts: [
+		{
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Posts'
+		}
+	],
 });
 
 userSchema.statics.isUsernameNotAvailable = async function (val)

@@ -62,8 +62,8 @@ router.post('/forgot-password', [
 router.post('/reset-password', [
     check("email", "Invalid email address").trim().custom(val => isEmailAddressValid(val)),
     check("password", "Invalid password").trim().custom(val => isPasswordValid(val)),
-    check("confirmationPassword", "Passwords don't match").trim().custom((val, { req }) => val === req.body.password),
-    check("confHash", "A password reset confirmation key must be provided").notEmpty(),
+    check("confirmedPassword", "Passwords don't match").trim().custom((val, { req }) => val === req.body.password),
+    check("confirmationHash", "A password reset confirmation key must be provided").notEmpty(),
     errorChecker,
 ], exceptionHandler(resetPassword))
 
@@ -72,9 +72,9 @@ router.post('/reset-password', [
 //@access Public
 router.post('/confirm-email', [
     check("email", "Invalid email address").trim().custom(val => isEmailAddressValid(val)),
-    check("confHash", "An email confirmation key must be provided").notEmpty(),
+    check("confirmationHash", "An email confirmation key must be provided").notEmpty(),
     errorChecker,
-], exceptionHandler(resetPassword))
+], exceptionHandler(confirmEmail))
 
 //@route POST api/auth/register
 //@desc Register user
@@ -84,6 +84,6 @@ router.post('/register', [
     check("email", "Please enter a valid email address").trim().custom(val => isEmailAddressValid(val)),
     check("password", "Please enter a password at least 8 characters long and contain minimum 1 uppercase letter, 2 lowercase letters, 2 digits and 1 symbol.").trim().custom(val => isPasswordValid(val)),
     errorChecker,
-], exceptionHandler(loginUser))
+], exceptionHandler(createUser))
 
 module.exports = router

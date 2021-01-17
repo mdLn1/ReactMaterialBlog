@@ -1,21 +1,10 @@
 let mongoose = require("mongoose");
 let Schema = mongoose.Schema;
 
-let postSchema = new Schema({
-  title: { type: String, required: true },
+let commentSchema = new Schema({
   content: { type: String, required: true },
-  author: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Users",
-  },
+  author: { type: String, required: true },
   postedDate: { type: Date, default: Date.now },
-  pinned: { type: Boolean },
-  comments: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Comments",
-    },
-  ],
   outcomeDecided: { type: Boolean },
   outcomeDate: { type: Date },
   reports: [
@@ -27,6 +16,6 @@ let postSchema = new Schema({
   ],
 });
 
-let postModel = mongoose.model("Posts", postSchema);
+let commentModel = mongoose.model("Comments", commentSchema);
 
-module.exports = postModel;
+module.exports = commentModel;

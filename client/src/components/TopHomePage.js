@@ -1,11 +1,10 @@
 import React, { useState, Fragment } from "react";
-import PropTypes from "prop-types";
 import ReactMde from "react-mde";
 import * as Showdown from "showdown";
 import "react-mde/lib/styles/css/react-mde-all.css";
+import axios from "axios";
 import { Button, Icon } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
-import CssBaseline from "@material-ui/core/CssBaseline";
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
 import Container from "@material-ui/core/Container";
@@ -19,6 +18,15 @@ import MenuItem from "@material-ui/core/MenuItem";
 import MenuList from "@material-ui/core/MenuList";
 import ValidationTextField from "./customizedElements/ValidationTextField";
 import CustomContainedButton from "./customizedElements/CustomContainedButton";
+import { CREATE_POST } from "../httpRoutes";
+import {
+  isPostContentValid,
+  isPostTitleValid,
+} from "../utils/customValidators";
+import {
+  POST_TITLE_ERROR,
+  POST_CONTENT_ERROR,
+} from "../utils/inputErrorMessages";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -52,12 +60,26 @@ const TopHomePage = (props) => {
   const classes = useStyles();
 
   let newPostTitleProps = {};
+
   const [isNewPostFormShown, toggleNewPostForm] = useState(false);
-  const [value, setValue] = useState("");
+  const [postContent, setPostContent] = useState("");
+  const [postTitle, setPostTitle] = useState("");
+  const [isPostTitleError, togglePostTitleError] = useState(false);
+  const [isPostContentError, togglePostContentError] = useState(false);
+
   const [selectedTab, setSelectedTab] = useState("write");
   const [open, setOpen] = React.useState(false);
   const anchorRef = React.useRef(null);
   const [selectedIndex, setSelectedIndex] = React.useState(0);
+
+  const validatePostTitle = ({ target: { value } }) => {
+    setPostTitle(value);
+    if (isPostTitleValid(value)) {
+      togglePostTitleError(false);
+    } else {
+      togglePostTitleError(true);
+    }
+  };
 
   const handleClick = () => {
     console.info(`You clicked ${options[selectedIndex]}`);
@@ -80,10 +102,44 @@ const TopHomePage = (props) => {
     setOpen(false);
   };
 
+  const handleSubmitNewPost = async (e) => {
+    e.preventDefault();
+    let isPostValid = true;
+    if (!isPostTitleValid(postTitle)) {
+      togglePostTitleError(true);
+      isPostValid = false;
+    }
+    if (!isPostContentValid(postContent)) {
+      togglePostTitleError(true);
+      isPostValid = false;
+    }
+    if (isPostValid) {
+      try {
+        const data = {
+          title: postTitle,
+          content: postContent,
+        };
+        const resp = await axios.post(CREATE_POST, data);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
+  if (isPostTitleError) {
+    newPostTitleProps = {
+      error: true,
+      helperText: POST_TITLE_ERROR,
+    };
+  }
+
   return (
     <Fragment>
       <div className="top-navigation">
-        <Grid container justify={`${isNewPostFormShown ? "flex-end" : "space-between"}`}>
+        <Grid
+          container
+          justify={`${isNewPostFormShown ? "flex-end" : "space-between"}`}
+        >
           {!isNewPostFormShown && (
             <Grid item xs={6} sm={6} md={6}>
               <Button
@@ -170,9 +226,7 @@ const TopHomePage = (props) => {
               </Typography>
               <form
                 className={classes.form}
-                onSubmit={(e) => {
-                  e.preventDefault();
-                }}
+                onSubmit={(e) => handleSubmitNewPost(e)}
                 noValidate
                 autoComplete="off"
               >
@@ -184,11 +238,12 @@ const TopHomePage = (props) => {
                   fullWidth
                   label="New Post Title"
                   name="postTitle"
+                  onChange={(e) => validatePostTitle(e)}
                   {...newPostTitleProps}
                 />
                 <ReactMde
-                  value={value}
-                  onChange={setValue}
+                  value={postContent}
+                  onChange={setPostContent}
                   selectedTab={selectedTab}
                   onTabChange={setSelectedTab}
                   generateMarkdownPreview={(markdown) =>
@@ -217,7 +272,7 @@ const TopHomePage = (props) => {
                       fullWidth
                       variant="contained"
                       color="success"
-                      onClick={() => toggleNewPostForm(false)}
+                      onClick={(e) => handleSubmitNewPost(e)}
                     >
                       {" "}
                       Submit{" "}

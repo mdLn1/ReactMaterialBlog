@@ -2,7 +2,6 @@ import React, { useState, useEffect, Fragment } from "react";
 import io from "socket.io-client";
 import axios from "axios";
 import Avatar from "@material-ui/core/Avatar";
-import CssBaseline from "@material-ui/core/CssBaseline";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Button from "@material-ui/core/Button";
 import Checkbox from "@material-ui/core/Checkbox";
@@ -14,12 +13,19 @@ import Typography from "@material-ui/core/Typography";
 import Container from "@material-ui/core/Container";
 import { secondary } from "../AppColors";
 import { makeStyles } from "@material-ui/core/styles";
-import isEmailAddressValid from "../utils/isEmailAddressValid";
+import { isEmailAddressValid } from "../utils/customValidators";
 import ValidationTextField from "../components/customizedElements/ValidationTextField";
 import Copyright from "../components/customizedElements/Copyright";
 import { API_URL, providers } from "../AppSettings";
 import OAuth from "../components/OAuth";
 import { FORGOT_PASSWORD, LOGIN } from "../httpRoutes";
+import Loader from "../components/Loader";
+import {
+  EMAIL_ADDRESS_ERROR,
+  PASSWORD_LOGIN_ERROR,
+} from "../utils/inputErrorMessages";
+import asyncRequestSender from "../utils/asyncRequestSender";
+import { LOGIN_FAILED } from "../contexts/types";
 
 const socket = io(API_URL);
 
@@ -95,11 +101,7 @@ export default function SignIn() {
           email: emailAddress,
           password,
         };
-        try {
-          const resp = await axios.post(LOGIN, data);
-        } catch (error) {
-          console.log(error);
-        }
+        console.log(await asyncRequestSender(LOGIN, data, 1));
       } else {
         if (!isEmailAddressValid(emailAddress)) {
           toggleEmailAddressError(true);
@@ -134,15 +136,14 @@ export default function SignIn() {
   if (isPasswordError) {
     passwordFieldProps = {
       error: true,
-      helperText:
-        "Password must be at least 5 characters long before submission.",
+      helperText: PASSWORD_LOGIN_ERROR,
     };
   }
 
   if (isEmailAddressError) {
     emailFieldProps = {
       error: true,
-      helperText: "You must enter a valid email address before submission.",
+      helperText: EMAIL_ADDRESS_ERROR,
     };
   }
   if (isPasswordError || isEmailAddressError || isLoading) {
@@ -160,6 +161,7 @@ export default function SignIn() {
         <Typography component="h1" variant="h5">
           {isPasswordForgotten ? "Reset Password" : "Sign in"}
         </Typography>
+        {isLoading && <Loader />}
         <form
           className={classes.form}
           onSubmit={(e) => {

@@ -17,11 +17,17 @@ export default (props) =>
 
     const [state, dispatch] = useReducer(mainReducer, initialState);
 
-    const loginUser = (user) => loginUserDef(user, dispatch)
+    const loginUser = (user, err = null) => {
+        if(err) {
+            
+        }
+    }
+
     const oAuthLogin = (data) =>
     {
         dispatch({ type: OAUTH_LOGIN_SUCCESS, payload: data });
     }
+
     const registerUser = (user) => registerUserDef(user, dispatch)
     const test = (user) => testFramework(user, dispatch)
 
