@@ -1,16 +1,23 @@
 const USERNAME_ERROR =
-  "Username must contain at least 2 letters and be minimum 5 characters long.";
+  "Username must contain at least 2 letters and be minimum 5 characters long (maximum 20).";
 const EMAIL_ADDRESS_ERROR =
   "You must enter a valid email address before submission.";
 const PASSWORD_LOGIN_ERROR =
   "Password must be at least 5 characters long before submission.";
 const PASSWORD_REGISTER_ERROR =
-  "Please enter a password at least 8 characters long and contain minimum 1 uppercase letter, 2 lowercase letters, 2 digits and 1 symbol.";
+  "Please enter a password at least 8 characters long and contain minimum 1 uppercase letter, 2 lowercase letters, 2 digits and 1 symbol (maximum 100).";
 const CONFIRMED_PASSWORD_ERROR = "The passwords do not match.";
 const POST_TITLE_ERROR =
-  "Title must be at least 10 characters long before submission.";
+  "Title must be at least 10 characters long before submission (maximum 150).";
 const POST_CONTENT_ERROR =
-  "Content must be at least 100 characters long before submission.";
+  "Content must be at least 200 characters long before submission (maximum 15,000).";
+const NEWS_TITLE_ERROR =
+  "Title must be at least 10 characters long before submission (maximum 50).";
+const NEWS_CONTENT_ERROR =
+  "Content must be at least 10 characters long before submission (maximum 100).";
+const NEWS_START_DATE_ERROR = "Start date cannot be a date in the past.";
+const NEWS_END_DATE_ERROR = "End date cannot be a date before start date.";
+const NEWS_WRAP_LINK_ERROR = "A valid link must start with https://";
 
 module.exports = {
   USERNAME_ERROR,
@@ -20,4 +27,9 @@ module.exports = {
   CONFIRMED_PASSWORD_ERROR,
   POST_TITLE_ERROR,
   POST_CONTENT_ERROR,
+  NEWS_CONTENT_ERROR,
+  NEWS_TITLE_ERROR,
+  NEWS_START_DATE_ERROR,
+  NEWS_END_DATE_ERROR,
+  NEWS_WRAP_LINK_ERROR,
 };

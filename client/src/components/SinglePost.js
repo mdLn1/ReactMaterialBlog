@@ -1,12 +1,11 @@
 import React, { Fragment, useState } from "react";
 import PropTypes from "prop-types";
 import ReactMarkdown from "react-markdown";
-import CssBaseline from "@material-ui/core/CssBaseline";
-import EditPost from "./EditPost";
 import CommentsSection from "./CommentsSection";
 import Tooltip from "@material-ui/core/Tooltip";
 import MultipleOptionsMenu from "./MultipleOptionsMenu";
 import { secondary } from "../AppColors";
+import PostForm from './PostForm'
 
 const SinglePost = ({
   title,
@@ -30,20 +29,16 @@ const SinglePost = ({
     }, 3000);
   }
 
-  function toggleActions() {
-    toggleShowActions(true);
-    setTimeout(() => {
-      toggleShowActions(false);
-    }, 7000);
-  }
-
   return isPostBeingEdited ? (
-    <EditPost
-      title={title}
-      content={content}
-      cancelEditing={() => toggleEditMode(false)}
-      submitChanges={() => toggleEditMode(false)}
-    />
+    <div className="edit-post">
+      <PostForm
+        isBeingEdited
+        title={title}
+        content={content}
+        cancelAction={() => toggleEditMode(false)}
+        successAction={() => toggleEditMode(false)}
+      />
+    </div>
   ) : (
     <article
       className="main-post single-post"
@@ -63,29 +58,6 @@ const SinglePost = ({
               onClick={() => setPin(!pinApplied)}
             ></i>
           </Tooltip>
-          {/* <Tooltip title="Actions" arrow interactive>
-            <i
-              className="fas fa-ellipsis-v"
-              onClick={() => toggleActions()}
-            ></i>
-          </Tooltip>
-          {showPostActions && (
-            <div className="dropleft">
-              <p onClick={() => toggleEditMode(!isPostBeingEdited)}>
-                {" "}
-                <i className="fas fa-edit edit"></i>
-                <span>Edit</span>
-              </p>
-              <p>
-                <i className="fas fa-trash-alt delete"></i>
-                <span>Delete</span>
-              </p>
-              <p>
-                <i className="far fa-flag"></i>
-                <span>Report</span>
-              </p>
-            </div>
-          )} */}
           <MultipleOptionsMenu
             options={[
               {

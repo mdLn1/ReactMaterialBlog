@@ -1,9 +1,9 @@
 import React, { useState, useEffect, Fragment } from "react";
-import axios from "axios";
 import Avatar from "@material-ui/core/Avatar";
-import Button from "@material-ui/core/Button";
 import { Link, useParams, useLocation } from "react-router-dom";
 import Grid from "@material-ui/core/Grid";
+import CircularProgress from "@material-ui/core/CircularProgress";
+import { useSnackbar } from "notistack";
 import Box from "@material-ui/core/Box";
 import VerifiedUserOutlinedIcon from "@material-ui/icons/VerifiedUserOutlined";
 import ErrorOutlinedIcon from "@material-ui/icons/ErrorOutlined";
@@ -12,8 +12,8 @@ import Container from "@material-ui/core/Container";
 import { secondary, success, error } from "../AppColors";
 import { makeStyles } from "@material-ui/core/styles";
 import Copyright from "../components/customizedElements/Copyright";
-import { CONFIRM_EMAIL } from "../httpRoutes";
-import Loader from "../components/Loader";
+import { AUTH_ROUTE } from "../httpRoutes";
+import asyncRequestSender from "../utils/asyncRequestSender";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -40,22 +40,34 @@ const EmailConfirmed = () => {
   const classes = useStyles();
   const [isLoading, toggleLoading] = useState(false);
   const location = useLocation();
+  const { enqueueSnackbar } = useSnackbar();
+  const [responseErrors, setResponseErrors] = useState([]);
+
   const [successfullyVerified, setSuccessfullyVerified] = useState(false);
-  const { hash } = useParams();
   const verifyEmail = async () => {
     toggleLoading(true);
-    if (hash?.length < 10) {
+    const currentHref = window.location.href;
+    const [_, hash] = currentHref.split("confirm-email/");
+    if (hash.length < 10) {
       setSuccessfullyVerified(false);
     } else {
-      const data = {
+      const requestData = {
         confirmationHash: hash,
       };
-      try {
-        const resp = await axios.post(CONFIRM_EMAIL, data);
+      const { isSuccess, errors, status, data } = await asyncRequestSender(
+        AUTH_ROUTE + "confirm-email",
+        requestData,
+        1
+      );
+      if (isSuccess) {
+        enqueueSnackbar("You've confirmed your email.", { variant: "success" });
         setSuccessfullyVerified(true);
-      } catch (error) {
-        console.log(error);
-        setSuccessfullyVerified(false);
+      } else {
+        if (status === 400) {
+          setResponseErrors(errors);
+        } else {
+          errors.forEach((el) => enqueueSnackbar(el, { variant: "error" }));
+        }
       }
     }
     toggleLoading(false);
@@ -104,7 +116,7 @@ const EmailConfirmed = () => {
             </Grid>
           </Fragment>
         ) : (
-          <Loader />
+          <CircularProgress />
         )}
       </div>
       <Box mt={8}>

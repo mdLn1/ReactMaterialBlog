@@ -12,7 +12,6 @@ async function confirmEmail(req, res) {
   if (!user)
     throw new HttpError("No user found matching the confirmation key", 400);
 
-  user.emailConfirmationHash = "";
   user.emailConfirmed = true;
 
   await user.save();
@@ -47,7 +46,7 @@ async function createUser(req, res) {
   try {
     let response = await transporter.sendMail({
       from: process.env.EMAIL_SENDER_ADDRESS,
-      to: user.email,
+      to: newUser.email,
       subject: "Confirm your email address",
       text: `Please copy the following link in a browser to confirm your email address ${
         process.env.NODE_ENV !== "production"
@@ -68,7 +67,7 @@ async function createUser(req, res) {
     );
   }
 
-  const payload = { id: user._id };
+  const payload = { id: newUser._id };
 
   const token = jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: "60d",
@@ -76,7 +75,7 @@ async function createUser(req, res) {
 
   if (!token) throw new Error("Could not create token, please try to login");
 
-  res.status(201).json().end();
+  res.status(201).json();
 }
 
 async function loginUser(req, res) {
@@ -106,14 +105,42 @@ async function loginUser(req, res) {
   };
 
   if (user.displayEmail) userDTO.email = user.email;
-  res.status(200).json({ user: userDTO, token }).end();
+  res.status(200).json({ user: userDTO, token });
+}
+
+async function getUser(req, res) {
+  const user = await User.findById(
+    req.user.id,
+    "email _id name username photoUrl displayEmail emailConfirmed password"
+  );
+  if (!user) throw new HttpError("User not found.", 401);
+  const payload = { id: user._id };
+  const token = jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: "60d",
+  });
+
+  if (!token) throw new HttpError("Could not create token, please try again later", 500);
+
+  let userDTO = {
+    name: user.name,
+    username: user.username,
+    displayEmail: user.displayEmail,
+    photoUrl: user.photoUrl,
+    emailConfirmed: user.emailConfirmed,
+  };
+
+  if (user.displayEmail) userDTO.email = user.email;
+  res.status(200).json({ user: userDTO, token });
 }
 
 async function forgotPassword(req, res) {
   const { email } = req.body;
   const user = await User.findOne({ email: new RegExp(email, "i") });
   if (!user)
-    throw new HttpError("Could not find the email address in our records", 400);
+    return res.status(200).json({
+      message:
+        "If the email address provided matches our records you should receive an email soon.",
+    });
 
   const salt = await bcrypt.genSalt(10);
   const confHash = await bcrypt.hash("confHash", salt);
@@ -148,7 +175,13 @@ async function forgotPassword(req, res) {
     );
   }
 
-  res.status(204).end();
+  res
+    .status(200)
+    .json({
+      message:
+        "If the email address provided matches our records you should receive an email soon.",
+    })
+    .end();
 }
 
 async function resetPassword(req, res) {
@@ -240,4 +273,5 @@ module.exports = {
   forgotPassword,
   resetPassword,
   confirmEmail,
+  getUser,
 };

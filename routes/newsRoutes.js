@@ -5,81 +5,81 @@ const {
   asyncMiddlewareExceptionHandler,
 } = require("../utils");
 const {
-  createPost,
-  getAllPosts,
-  deletePost,
-  editPost,
-  reportPost,
-} = require("../controllers/postController");
-const {
   authenticationMiddleware,
   authorizationMiddleware,
   errorCheckerMiddleware,
 } = require("../middleware");
 const {
-  isPostContentValid,
-  isPostTitleValid,
+  isNewsContentValid,
+  isNewsTitleValid,
 } = require("../utils/customValidators");
 const {
-  POST_CONTENT_ERROR,
-  POST_TITLE_ERROR,
+  NEWS_CONTENT_ERROR,
+  NEWS_TITLE_ERROR,
 } = require("../utils/inputErrorMessages");
+const {
+  createNews,
+  deleteNews,
+  editNews,
+  getAllNews,
+  reportNews,
+} = require("../controllers/newsController");
 
-//@route api/posts/
-//@desc Get all the posts
+//@route api/news/
+//@desc Get all the news
 //@access Public
-router.get("/", exceptionHandler(getAllPosts));
+router.get("/", exceptionHandler(getAllNews));
 
-//@route api/posts/
-//@desc Create a post
+//@route api/news/
+//@desc Create news
 //@access Private and special privileges
 router.post(
   "/",
   [
-    check("title", POST_TITLE_ERROR)
+    check("title", NEWS_TITLE_ERROR)
       .trim()
-      .custom((val) => isPostTitleValid(val)),
-    check("content", POST_CONTENT_ERROR)
+      .custom((val) => isNewsTitleValid(val)),
+    check("content", NEWS_CONTENT_ERROR)
       .trim()
-      .custom((val) => isPostContentValid(val)),
+      .custom((val) => isNewsContentValid(val)),
     errorCheckerMiddleware,
     authenticationMiddleware,
     asyncMiddlewareExceptionHandler(authorizationMiddleware),
   ],
-  exceptionHandler(createPost)
+  exceptionHandler(createNews)
 );
 
-//@route api/posts/:id
-//@desc Edit a post
+//@route api/news/:id
+//@desc Edit a news
 //@access Private and special privileges
 router.patch(
-  "/:postId",
+  "/:newsId",
   [
     authenticationMiddleware,
     asyncMiddlewareExceptionHandler(authorizationMiddleware),
   ],
-  exceptionHandler(editPost)
+  exceptionHandler(editNews)
 );
 
-//@route api/posts/:id
-//@desc Delete a post
+//@route api/news/:id
+//@desc Delete a news
 //@access Private and special privileges
 router.delete(
-  "/:postId",
+  "/:newsId",
   [
     authenticationMiddleware,
     asyncMiddlewareExceptionHandler(authorizationMiddleware),
   ],
-  exceptionHandler(deletePost)
+  exceptionHandler(deleteNews)
 );
 
-//@route api/posts/:id
-//@desc Report a post
+//@route api/news/:id/report
+//@desc Report news
 //@access Private and special privileges
 router.post(
-  "/:postId/report",
+  "/:newsId/report",
   [authenticationMiddleware],
-  exceptionHandler(reportPost)
+  exceptionHandler(reportNews)
 );
 
 module.exports = router;

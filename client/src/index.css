@@ -236,7 +236,19 @@ a:visited {
 
 /* #endregion */
 
+ul.errors {
+  align-self: flex-start;
+}
 
+ul.errors li {
+  color: var(--error);
+  font-size: 1.1rem;
+}
+
+p.error {
+  font-size: .9rem;
+  color: red;
+}
 
 
 /* #region Home page */

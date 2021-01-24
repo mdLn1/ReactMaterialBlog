@@ -11,6 +11,7 @@ const {
   exampleRoutes,
   postRoutes,
   testRoutes,
+  newsRoutes,
 } = require("./routes");
 const compression = require("compression");
 const helmet = require("helmet");
@@ -80,13 +81,15 @@ app.use("/api/auth", apiLimiter, authRoutes);
 
 app.use("/api/posts", apiLimiter, postRoutes);
 
+app.use("/api/news", apiLimiter, newsRoutes);
+
 app.use("/api", apiLimiter, testRoutes);
 
 // middleware for a route
 // app.use("/api/users/login", apiLimiter, (req, res) => { return res.status(200).json({ message: "success" }) })
 
 app.use((req, res, next) => {
-  res.status(404).json({ errors: "Page not found" });
+  res.status(404).end();
 });
 
 app.use((err, req, res, next) => {

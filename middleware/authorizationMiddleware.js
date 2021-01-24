@@ -10,7 +10,7 @@ module.exports = async function (req, res, next) {
 
   if (user.isAdmin) {
     req.user = { id: user._id, isAdmin: user.isAdmin, email: user.email };
-    next();
+    return next();
   }
   throw new HttpError("Forbidden. You must be an admin to proceed.", 403);
 };

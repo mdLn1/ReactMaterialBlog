@@ -5,6 +5,7 @@ import SideContainer from "../components/SideContainer";
 import MainContext from "../contexts/main/mainContext";
 
 const Home = () => {
+
   const mainContext = useContext(MainContext);
 
   const { test, testObj } = mainContext;

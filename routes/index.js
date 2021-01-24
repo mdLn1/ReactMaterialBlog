@@ -3,4 +3,5 @@ module.exports = {
   postRoutes: require("./postRoutes"),
   testRoutes: require("./testRoutes"),
   exampleRoutes: require("./exampleRoutes"),
+  newsRoutes: require("./newsRoutes"),
 };

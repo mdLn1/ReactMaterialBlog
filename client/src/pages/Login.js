@@ -1,6 +1,5 @@
-import React, { useState, useEffect, Fragment } from "react";
+import React, { useState, useEffect, Fragment, useContext } from "react";
 import io from "socket.io-client";
-import axios from "axios";
 import Avatar from "@material-ui/core/Avatar";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Button from "@material-ui/core/Button";
@@ -18,14 +17,16 @@ import ValidationTextField from "../components/customizedElements/ValidationText
 import Copyright from "../components/customizedElements/Copyright";
 import { API_URL, providers } from "../AppSettings";
 import OAuth from "../components/OAuth";
-import { FORGOT_PASSWORD, LOGIN } from "../httpRoutes";
-import Loader from "../components/Loader";
+import { AUTH_ROUTE } from "../httpRoutes";
 import {
   EMAIL_ADDRESS_ERROR,
   PASSWORD_LOGIN_ERROR,
 } from "../utils/inputErrorMessages";
 import asyncRequestSender from "../utils/asyncRequestSender";
-import { LOGIN_FAILED } from "../contexts/types";
+import { useSnackbar } from "notistack";
+import { SNACKBAR_AUTO_HIDE_DURATION } from "../AppSettings";
+import CircularProgress from "@material-ui/core/CircularProgress";
+import MainContext from "../contexts/main/mainContext";
 
 const socket = io(API_URL);
 
@@ -47,10 +48,16 @@ const useStyles = makeStyles((theme) => ({
   submit: {
     margin: theme.spacing(3, 0, 2),
   },
+  loader: {
+    margin: theme.spacing(2, 1, 1),
+  },
 }));
 
 export default function SignIn() {
   const classes = useStyles();
+  const { enqueueSnackbar } = useSnackbar();
+  const mainContext = useContext(MainContext);
+
   let emailFieldProps = {};
   let passwordFieldProps = {};
   let submissionButtonProps = { disabled: true };
@@ -60,6 +67,7 @@ export default function SignIn() {
   const [isEmailAddressError, toggleEmailAddressError] = useState(false);
   const [isLoading, toggleLoading] = useState(false);
   const [isPasswordForgotten, togglePasswordForgotten] = useState(false);
+  const [responseErrors, setResponseErrors] = useState([]);
 
   const validateEmail = ({ target: { value } }) => {
     setEmailAddress(value);
@@ -69,6 +77,10 @@ export default function SignIn() {
       toggleEmailAddressError(false);
     }
   };
+
+  useEffect(() => {
+    return () => socket.disconnect();
+  }, []);
 
   const validatePassword = ({ target: { value } }) => {
     setPassword(value);
@@ -87,21 +99,51 @@ export default function SignIn() {
         toggleLoading(false);
         return;
       }
-      const data = {
+      const requestData = {
         email: emailAddress,
       };
-      try {
-        const resp = await axios.post(FORGOT_PASSWORD, data);
-      } catch (error) {
-        console.log(error);
+      const { isSuccess, errors, status, data } = asyncRequestSender(
+        AUTH_ROUTE + "password-forgotten",
+        requestData,
+        1
+      );
+      if (isSuccess) {
+        enqueueSnackbar("Email sent", {
+          variant: "success",
+          autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
+        });
+      } else {
+        if (status === 400) {
+        } else {
+          errors.forEach((el) =>
+            enqueueSnackbar(el, {
+              variant: "error",
+              autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
+            })
+          );
+        }
       }
     } else {
       if (isEmailAddressValid(emailAddress) && password.length > 5) {
-        const data = {
+        const requestData = {
           email: emailAddress,
           password,
         };
-        console.log(await asyncRequestSender(LOGIN, data, 1));
+        const { isSuccess, errors, status, data } = await asyncRequestSender(
+          AUTH_ROUTE + "login",
+          requestData,
+          1
+        );
+        if (isSuccess) {
+          enqueueSnackbar("You've logged in.", { variant: "success" });
+          mainContext.login(data);
+        } else {
+          if (status === 400) {
+            setResponseErrors(errors);
+          } else {
+            errors.forEach((el) => enqueueSnackbar(el, { variant: "error" }));
+          }
+        }
       } else {
         if (!isEmailAddressValid(emailAddress)) {
           toggleEmailAddressError(true);
@@ -161,7 +203,15 @@ export default function SignIn() {
         <Typography component="h1" variant="h5">
           {isPasswordForgotten ? "Reset Password" : "Sign in"}
         </Typography>
-        {isLoading && <Loader />}
+        {isLoading && <CircularProgress className={classes.loader} />}
+        {responseErrors.length > 0 && (
+          <ul className="errors">
+            {responseErrors.map((el, index) => (
+              <li key={index}>{el}</li>
+            ))}
+          </ul>
+        )}
+
         <form
           className={classes.form}
           onSubmit={(e) => {

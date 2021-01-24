@@ -2,11 +2,12 @@ import React, { Fragment, useState } from "react";
 import PropTypes from "prop-types";
 import ReactMarkdown from "react-markdown";
 import { containsMDImage } from "../utils/matchMDImagePattern";
-import EditPost from "./EditPost";
 import { Link } from "react-router-dom";
 import Tooltip from "@material-ui/core/Tooltip";
 import MultipleOptionsMenu from "./MultipleOptionsMenu";
 import { secondary } from "../AppColors";
+import PostForm from "./PostForm";
+
 const MainPost = ({
   title,
   content,
@@ -23,7 +24,7 @@ const MainPost = ({
   const [isLiked, toggleLike] = useState(false);
   const [linkCopied, toggleLinkCopy] = useState(false);
   const [showPostActions, toggleShowActions] = useState(false);
-
+  
   function copyLink() {
     toggleLinkCopy(true);
     setTimeout(() => {
@@ -39,12 +40,15 @@ const MainPost = ({
   }
 
   return isPostBeingEdited ? (
-    <EditPost
-      title={title}
-      content={content}
-      cancelEditing={() => toggleEditMode(false)}
-      submitChanges={() => toggleEditMode(false)}
-    />
+    <div className="edit-post">
+      <PostForm
+        isBeingEdited
+        title={title}
+        content={content}
+        cancelAction={() => toggleEditMode(false)}
+        successAction={() => toggleEditMode(false)}
+      />
+    </div>
   ) : (
     <article
       className="main-post"
@@ -64,36 +68,13 @@ const MainPost = ({
               onClick={() => setPin(!pinApplied)}
             ></i>
           </Tooltip>
-          {/* <Tooltip title="Actions" arrow interactive>
-            <i
-              className="fas fa-ellipsis-v"
-              onClick={() => toggleActions()}
-            ></i>
-          </Tooltip>
-          {showPostActions && (
-            <div className="dropleft">
-              <p onClick={() => toggleEditMode(!isPostBeingEdited)}>
-                {" "}
-                <i className="fas fa-edit edit"></i>
-                <span>Edit</span>
-              </p>
-              <p>
-                <i className="fas fa-trash-alt delete"></i>
-                <span>Delete</span>
-              </p>
-              <p>
-                <i className="far fa-flag"></i>
-                <span>Report</span>
-              </p>
-            </div>
-          )} */}
           <MultipleOptionsMenu
             options={[
               {
                 fontAwesomeIcon: "fas fa-edit edit",
                 text: "Edit",
                 action: () => {
-                  toggleEditMode(false);
+                  toggleEditMode(true);
                 },
               },
               {

@@ -1,6 +1,5 @@
 import React, { useState, Fragment } from "react";
-import { Button, Icon, Typography, Grid, Container } from "@material-ui/core";
-import CssBaseline from "@material-ui/core/CssBaseline";
+import { Button, Icon, Typography, Grid } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import News from "./News";
 import NewQuickNews from "./NewQuickNews";
@@ -29,6 +28,16 @@ const SideContainer = () => {
         <div>If you want to receive email updates you can subscribe below.</div>
         <div>
           <Button color="primary">Subscribe</Button>
+        </div>
+      </div>
+      <div className="subscribe-prompt">
+        <div>
+          We like to provide free quality content and any support is well
+          appreciated, if you would like to donate please click the button
+          below.
+        </div>
+        <div>
+          <Button color="primary">Donate</Button>
         </div>
       </div>
       <div className="contact-form">

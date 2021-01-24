@@ -10,3 +10,5 @@ export const iconLinks = {
 export const API_URL = 'http://localhost:8080';
 
 export const providers = ['github', 'google']
+
+export const SNACKBAR_AUTO_HIDE_DURATION = 4000;

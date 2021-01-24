@@ -1,7 +1,7 @@
 let mongoose = require("mongoose");
 let Schema = mongoose.Schema;
 
-let postSchema = new Schema({
+let newsSchema = new Schema({
   title: { type: String, required: true },
   content: { type: String, required: true },
   author: {
@@ -9,22 +9,15 @@ let postSchema = new Schema({
     ref: "Users",
   },
   postedDate: { type: Date, default: Date.now },
-  pinned: { type: Boolean },
   edited: { type: Boolean, default: false },
-  comments: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Comments",
-    },
-  ],
+  link: { type: String },
+  displayStartDate: { type: Date, required: true },
+  displayEndDate: { type: Date, required: true },
   outcomeDecided: { type: Boolean },
   outcomeDate: { type: Date },
   reports: [
     {
-      reportedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Users'
-      },
+      reportedBy: { type: String, required: true },
       reason: { type: String, required: true },
       reportedDate: { type: Date, default: Date.now },
     },
@@ -38,6 +31,6 @@ let postSchema = new Schema({
   ],
 });
 
-let postModel = mongoose.model("Posts", postSchema);
+let postModel = mongoose.model("News", newsSchema);
 
 module.exports = postModel;

@@ -1,25 +1,20 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import EditQuickNews from "./EditQuickNews";
 import MultipleOptionsMenu from "./MultipleOptionsMenu";
 import ReactMarkdown from "react-markdown";
+import NewsForm from "./NewsForm";
 
 const News = ({ title, content }) => {
   const [showNewsActions, toggleNewsActions] = useState(false);
   const [showEditPost, toggleEditPost] = useState(false);
 
-  function displayNewsActions() {
-    toggleNewsActions(true);
-    setTimeout(() => {
-      toggleNewsActions(false);
-    }, 4000);
-  }
   return showEditPost ? (
-    <EditQuickNews
+    <NewsForm
+      isEditing
       title={title}
       content={content}
       cancelAction={() => toggleEditPost(false)}
-      submitAction={() => toggleEditPost(false)}
+      successAction={() => toggleEditPost(false)}
     />
   ) : (
     <article

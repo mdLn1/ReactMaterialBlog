@@ -1,21 +1,26 @@
+// libraries
 import React, { useState, useContext } from "react";
-import Avatar from "@material-ui/core/Avatar";
-import CssBaseline from "@material-ui/core/CssBaseline";
-import Checkbox from "@material-ui/core/Checkbox";
+import { useSnackbar } from "notistack";
+import {
+  Avatar,
+  Checkbox,
+  Grid,
+  Box,
+  Button,
+  Typography,
+  RadioGroup,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  Radio,
+  Container,
+  CircularProgress,
+} from "@material-ui/core";
 import { Link, Redirect } from "react-router-dom";
-import Grid from "@material-ui/core/Grid";
-import Box from "@material-ui/core/Box";
-import Button from "@material-ui/core/Button";
 import LockOutlinedIcon from "@material-ui/icons/LockOutlined";
-import Typography from "@material-ui/core/Typography";
-import RadioGroup from "@material-ui/core/RadioGroup";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import FormControl from "@material-ui/core/FormControl";
-import FormLabel from "@material-ui/core/FormLabel";
-import Radio from "@material-ui/core/Radio";
-import Container from "@material-ui/core/Container";
 import { makeStyles } from "@material-ui/core/styles";
 
+// project items
 import ValidationTextField from "../components/customizedElements/ValidationTextField";
 import Copyright from "../components/customizedElements/Copyright";
 import {
@@ -25,14 +30,17 @@ import {
 } from "../utils/customValidators";
 import { secondary } from "../AppColors";
 import MainContext from "../contexts/main/mainContext";
-import Loader from "../components/Loader";
+import { AUTH_ROUTE } from "../httpRoutes";
 import {
   EMAIL_ADDRESS_ERROR,
   PASSWORD_REGISTER_ERROR,
   CONFIRMED_PASSWORD_ERROR,
   USERNAME_ERROR,
 } from "../utils/inputErrorMessages";
+import asyncRequestSender from "../utils/asyncRequestSender";
+import { SNACKBAR_AUTO_HIDE_DURATION } from "../AppSettings";
 
+// styling
 const useStyles = makeStyles((theme) => ({
   paper: {
     marginTop: theme.spacing(8),
@@ -51,34 +59,74 @@ const useStyles = makeStyles((theme) => ({
   submit: {
     margin: theme.spacing(3, 0, 2),
   },
+  loader: {
+    margin: theme.spacing(2, 1, 1),
+  },
 }));
 
 export default function Register() {
+  // setup
   const classes = useStyles();
+  const { enqueueSnackbar } = useSnackbar();
   const mainContext = useContext(MainContext);
+  const { user } = mainContext;
+
+  //fields
   let emailFieldProps = {};
   let passwordFieldProps = {};
+  let confirmedPasswordFieldProps = {};
   let usernameFieldProps = {};
   let submissionButtonProps = { disabled: true };
+
+  // form values
   const [password, setPassword] = useState("");
-  const [isPasswordError, togglePasswordError] = useState(false);
+  const [confirmedPassword, setConfirmedPassword] = useState("");
   const [emailAddress, setEmailAddress] = useState("");
-  const [isEmailAddressError, toggleEmailAddressError] = useState(false);
   const [username, setUsername] = useState("");
-  const [isUsernameError, toggleUsernameError] = useState(false);
   const [receiveUpdatesTicked, toggleReceiveUpdates] = useState(false);
   const [isLoading, toggleLoading] = useState(false);
-  const { user } = mainContext;
   const [displayEmail, toggleDisplayEmail] = useState(false);
 
-  const handleRegistration = () => {
+  // form values errors
+  const [isPasswordError, togglePasswordError] = useState(false);
+  const [isConfirmedPasswordError, toggleConfirmedPasswordError] = useState(
+    false
+  );
+  const [isEmailAddressError, toggleEmailAddressError] = useState(false);
+  const [isUsernameError, toggleUsernameError] = useState(false);
+  const [responseErrors, setResponseErrors] = useState([]);
+
+  // action handlers
+
+  const handleEmailChange = ({ target: { value } }) => {
+    setEmailAddress(value);
+    toggleEmailAddressError(!isEmailAddressValid(value));
+  };
+
+  const handleConfirmationPasswordChange = ({ target: { value } }) => {
+    setConfirmedPassword(value);
+    toggleConfirmedPasswordError(value !== password);
+  };
+
+  const handlePasswordChange = ({ target: { value } }) => {
+    setPassword(value);
+    togglePasswordError(!isPasswordValid(value));
+  };
+
+  const handleUsernameChange = ({ target: { value } }) => {
+    setUsername(value);
+    toggleUsernameError(!isUsernameValid(value));
+  };
+
+  const handleRegistration = async () => {
     toggleLoading(true);
     if (
       isEmailAddressValid(emailAddress) &&
       isPasswordValid(password) &&
-      isUsernameValid(username)
+      isUsernameValid(username) &&
+      confirmedPassword === password
     ) {
-      const data = {
+      const requestData = {
         email: emailAddress,
         password,
         username,
@@ -86,48 +134,52 @@ export default function Register() {
         mailingSubscription: receiveUpdatesTicked,
       };
 
-      // submit
+      const { isSuccess, errors, status, data } = await asyncRequestSender(
+        AUTH_ROUTE + "register",
+        requestData,
+        1
+      );
+      if (isSuccess) {
+        enqueueSnackbar("An email was sent to the address provided.", {
+          variant: "success",
+          autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
+        });
+      } else {
+        if (status === 400) {
+          setResponseErrors(errors);
+        } else {
+          errors.forEach((el) =>
+            enqueueSnackbar(el, {
+              variant: "error",
+              autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
+            })
+          );
+        }
+      }
     } else {
-      if (!isEmailAddressValid(emailAddress)) toggleEmailAddressError(true);
-      if (!isPasswordValid(password)) togglePasswordError(true);
-      if (!isUsernameValid(username)) toggleUsernameError(true);
+      toggleEmailAddressError(!isEmailAddressValid(emailAddress));
+      togglePasswordError(!isPasswordValid(password));
+      toggleUsernameError(!isUsernameValid(username));
+      toggleConfirmedPasswordError(confirmedPassword !== password);
     }
     toggleLoading(false);
   };
 
-  const validateEmail = ({ target: { value } }) => {
-    setEmailAddress(value);
-    if (isEmailAddressValid(value)) {
-      toggleEmailAddressError(false);
-    } else {
-      toggleEmailAddressError(true);
-    }
-  };
-
-  const validatePassword = ({ target: { value } }) => {
-    setPassword(value);
-    if (isPasswordValid(value)) {
-      togglePasswordError(false);
-    } else {
-      togglePasswordError(true);
-    }
-  };
-
-  const validateUsername = ({ target: { value } }) => {
-    setUsername(value);
-    if (isUsernameValid(value)) {
-      toggleUsernameError(false);
-    } else {
-      toggleUsernameError(true);
-    }
-  };
-
+  // handling errors display
   if (isPasswordError) {
     passwordFieldProps = {
       error: true,
       helperText: PASSWORD_REGISTER_ERROR,
     };
   }
+
+  if (isConfirmedPasswordError) {
+    confirmedPasswordFieldProps = {
+      error: true,
+      helperText: CONFIRMED_PASSWORD_ERROR,
+    };
+  }
+
   if (isUsernameError) {
     usernameFieldProps = {
       error: true,
@@ -140,14 +192,22 @@ export default function Register() {
       helperText: EMAIL_ADDRESS_ERROR,
     };
   }
-  if (isPasswordError || isUsernameError || isEmailAddressError || isLoading) {
+  if (
+    isPasswordError ||
+    isUsernameError ||
+    isConfirmedPasswordError ||
+    isEmailAddressError ||
+    isLoading
+  ) {
     submissionButtonProps.disabled = true;
   } else {
     submissionButtonProps.disabled = false;
   }
 
+  // redirect if user logged in already
   if (user) return <Redirect exact to="/" />;
 
+  // ui component
   return (
     <Container component="main" maxWidth="xs">
       <div className={classes.paper}>
@@ -157,7 +217,14 @@ export default function Register() {
         <Typography component="h1" variant="h5">
           Register
         </Typography>
-        {isLoading && <Loader />}
+        {isLoading && <CircularProgress className={classes.loader} />}
+        {responseErrors.length > 0 && (
+          <ul className="errors">
+            {responseErrors.map((el, index) => (
+              <li key={index}>{el}</li>
+            ))}
+          </ul>
+        )}
         <form
           className={classes.form}
           onSubmit={(e) => {
@@ -175,7 +242,7 @@ export default function Register() {
             label="Username"
             name="username"
             autoComplete="username"
-            onChange={(e) => validateUsername(e)}
+            onChange={(e) => handleUsernameChange(e)}
             {...usernameFieldProps}
           />
           <ValidationTextField
@@ -186,7 +253,7 @@ export default function Register() {
             label="Email Address"
             name="email"
             autoComplete="email"
-            onChange={(e) => validateEmail(e)}
+            onChange={(e) => handleEmailChange(e)}
             {...emailFieldProps}
           />
           {!isEmailAddressError && (
@@ -233,8 +300,19 @@ export default function Register() {
             label="Password"
             type="password"
             id="password"
-            onChange={(e) => validatePassword(e)}
+            onChange={(e) => handlePasswordChange(e)}
             {...passwordFieldProps}
+          />
+          <ValidationTextField
+            variant="outlined"
+            margin="normal"
+            fullWidth
+            name="confirmedPassword"
+            label="Confirm Password"
+            type="password"
+            id="confirmedPassword"
+            onChange={(e) => handleConfirmationPasswordChange(e)}
+            {...confirmedPasswordFieldProps}
           />
           <FormControlLabel
             control={

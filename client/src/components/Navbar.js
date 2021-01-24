@@ -2,12 +2,51 @@ import React, { useState, useEffect, useContext, Fragment } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { iconLinks } from "../AppSettings";
 import MainContext from "../contexts/main/mainContext";
+import { useSnackbar } from "notistack";
+import { SNACKBAR_AUTO_HIDE_DURATION } from "../AppSettings";
+import asyncRequestSender from "../utils/asyncRequestSender";
+import setAuthToken from "../utils/setAuthToken";
+import { AUTH_ROUTE } from "../httpRoutes";
 
 const Navbar = () => {
   const mainContext = useContext(MainContext);
   const location = useLocation();
   const [isSidenavShowing, toggleSidenav] = useState(false);
   const { user } = mainContext;
+  const { enqueueSnackbar } = useSnackbar();
+
+  useEffect(() => {
+    if (!user && localStorage.token) {
+      (async () => {
+        setAuthToken(localStorage.token);
+        const { isSuccess, errors, status, data } = await asyncRequestSender(
+          AUTH_ROUTE,
+          1
+        );
+        if (isSuccess) {
+          enqueueSnackbar("You've been logged in.", {
+            variant: "success",
+            autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
+          });
+          mainContext.login(data);
+          localStorage.setItem("token", data.token);
+          setAuthToken(data.token);
+        } else {
+          if (status === 401 || status === 400) {
+            localStorage.removeItem("token");
+            setAuthToken("");
+          } else {
+            errors.forEach((el) =>
+              enqueueSnackbar(el, {
+                variant: "error",
+                autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
+              })
+            );
+          }
+        }
+      })();
+    }
+  });
 
   useEffect(() => {
     if (isSidenavShowing) {
@@ -15,12 +54,14 @@ const Navbar = () => {
       toggleSidenav(false);
     }
   }, [location]);
-  
+
   return (
     <nav className="navbar">
       <section className="left">
         <Link to="/">Home</Link>
         <Link to="/about-me">About Me</Link>
+        <Link to="/about-me">Settings</Link>
+        <Link to="/about-me">Reports</Link>
         <i
           className="fas fa-bars"
           onClick={() => {
@@ -37,6 +78,8 @@ const Navbar = () => {
         <aside className="sidenav">
           <Link to="/">Home</Link>
           <Link to="/about-me">About Me</Link>
+          <Link to="/about-me">Settings</Link>
+          <Link to="/about-me">Reports</Link>
         </aside>
       </section>
       <section className="center">

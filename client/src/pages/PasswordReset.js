@@ -10,6 +10,7 @@ import CheckCircleOutlinedIcon from "@material-ui/icons/CheckCircleOutlined";
 import Typography from "@material-ui/core/Typography";
 import Container from "@material-ui/core/Container";
 import { secondary } from "../AppColors";
+import { useSnackbar } from "notistack";
 import { makeStyles } from "@material-ui/core/styles";
 import {
   isPasswordValid,
@@ -17,12 +18,14 @@ import {
 } from "../utils/customValidators";
 import ValidationTextField from "../components/customizedElements/ValidationTextField";
 import Copyright from "../components/customizedElements/Copyright";
-import { RESET_PASSWORD } from "../httpRoutes";
+import { AUTH_ROUTE } from "../httpRoutes";
 import {
   EMAIL_ADDRESS_ERROR,
   PASSWORD_REGISTER_ERROR,
   CONFIRMED_PASSWORD_ERROR,
 } from "../utils/inputErrorMessages";
+import asyncRequestSender from "../utils/asyncRequestSender";
+import { SNACKBAR_AUTO_HIDE_DURATION } from "../AppSettings";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -46,6 +49,7 @@ const useStyles = makeStyles((theme) => ({
 
 export default function PasswordReset() {
   const classes = useStyles();
+  const {enqueueSnackbar} = useSnackbar();
   let emailFieldProps = {};
   let passwordFieldProps = {};
   let confirmedPasswordFieldProps = {};
@@ -61,6 +65,8 @@ export default function PasswordReset() {
 
   const [isLoading, toggleLoading] = useState(false);
   const [passwordChanged, togglePasswordChanged] = useState(false);
+  const [responseErrors, setResponseErrors] = useState([]);
+
 
   let hash = "";
   if (window.location.href.includes("reset-password/")) {
@@ -102,17 +108,26 @@ export default function PasswordReset() {
       isPasswordValid(password) &&
       confirmedPassword === password
     ) {
-      const data = {
+      const requestData = {
         email: emailAddress,
         confirmationHash: hash,
         password,
         confirmedPassword,
       };
-      try {
-        const resp = await axios.post(RESET_PASSWORD, data);
+      const { isSuccess, errors, status, data } = await asyncRequestSender(
+        AUTH_ROUTE + "password-reset",
+        requestData,
+        1
+      );
+      if (isSuccess) {
+        enqueueSnackbar("You've changed your password.", { variant: "success" });
         togglePasswordChanged(true);
-      } catch (error) {
-        console.log(error);
+      } else {
+        if (status === 400) {
+          setResponseErrors(errors);
+        } else {
+          errors.forEach((el) => enqueueSnackbar(el, { variant: "error" }));
+        }
       }
     } else {
       if (!isPasswordValid(password)) {

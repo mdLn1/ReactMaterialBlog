@@ -7,6 +7,14 @@ let commentSchema = new Schema({
   postedDate: { type: Date, default: Date.now },
   outcomeDecided: { type: Boolean },
   outcomeDate: { type: Date },
+  postId: { type: String, required: true },
+  edited: { type: Boolean, default: false },
+  previousVersions: [
+    {
+      content: { type: String, required: true },
+      dateEdited: { type: Date, required: true },
+    },
+  ],
   reports: [
     {
       reporter: { type: String, required: true },

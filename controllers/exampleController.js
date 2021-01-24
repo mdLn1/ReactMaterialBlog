@@ -1,6 +1,6 @@
-async function exampleFunction(req, res)
+ function exampleFunction(req, res)
 {
-    return res.status(200).json({ message: "success" })
+ res.status(200).json({ message: "success" });
 }
 
 module.exports = { exampleFunction }
