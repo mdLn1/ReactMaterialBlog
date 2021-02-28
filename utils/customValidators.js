@@ -30,11 +30,15 @@ function isPostContentValid(val) {
 }
 
 function isNewsTitleValid(val) {
-  return val.length > 10 && val.length < 51;
+  return val && val.length > 10 && val.length < 51;
 }
 
 function isNewsContentValid(val) {
-  return val.length > 10 && val.length < 101;
+  return val && val.length > 10 && val.length < 101;
+}
+
+function isReportReasonValid(val) {
+  return val && val.length > 10 && val.length < 301;
 }
 
 function isStartDateValid(date) {
@@ -63,6 +67,9 @@ function isWrapLinkValid(val) {
   if (!val.startsWith("https://")) return false;
   return true;
 }
+function isCommentContentValid(val) {
+  return val && val.length > 4 && val.length < 301;
+}
 
 module.exports = {
   isEmailAddressValid,
@@ -73,5 +80,7 @@ module.exports = {
   isNewsContentValid,
   isNewsTitleValid,
   isStartDateValid,
-  isWrapLinkValid
+  isWrapLinkValid,
+  isCommentContentValid,
+  isReportReasonValid,
 };

@@ -1,101 +1,101 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { Icon } from '@material-ui/core';
-import Button from '@material-ui/core/Button'
-import { API_URL } from '../AppSettings'
-import MainContext from '../contexts/main/mainContext';
-import { Redirect } from "react-router-dom"
-class OAuth extends Component
-{
-    static contextType = MainContext;
+import React, { useContext, useCallback, useState, useEffect } from "react";
+import PropTypes from "prop-types";
+import { Icon } from "@material-ui/core";
+import Button from "@material-ui/core/Button";
+import { API_URL } from "../AppSettings";
+import MainContext from "../contexts/main/mainContext";
+import { SocketContext } from "../contexts/socket/socket";
+import { Redirect } from "react-router-dom";
+import { useSnackbar } from "notistack";
+import { SNACKBAR_AUTO_HIDE_DURATION } from "../AppSettings";
 
-    state = {
-        disabled: false
-    }
+const OAuth = ({ provider }) => {
+  const socket = useContext(SocketContext);
+  const { user, oAuthLogin } = useContext(MainContext);
+  const [disabled, setDisabled] = useState(false);
+  const [popup, setPopUp] = useState(null);
+  const { enqueueSnackbar } = useSnackbar();
 
-
-    componentDidMount()
-    {
-        const { socket, provider } = this.props
-
-        socket.on(provider, (data) =>
-        {
-            if (data.error)
-                console.error(data.error)
-
-            this.popup.close()
-            this.context.oAuthLogin({ user: data.user, token: data.token, oAuthProvider: provider })
+  const handleProviderLogin = useCallback((data) => {
+    if (data?.errors?.length) {
+      data.errors.forEach((el) =>
+        enqueueSnackbar(el, {
+          variant: "error",
+          autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
         })
+      );
     }
 
-    checkPopup()
-    {
-        const check = setInterval(() =>
-        {
-            const { popup } = this
-            if (!popup || popup.closed || popup.closed === undefined)
-            {
-                clearInterval(check)
-                this.setState({ disabled: false })
-            }
-        }, 1000)
-    }
+    popup.close();
+    oAuthLogin({
+      user: data.user,
+      token: data.token,
+      oAuthProvider: provider,
+    });
+  });
 
-    openPopup()
-    {
-        const { provider, socket } = this.props
-        const width = 600, height = 600
-        const left = (window.innerWidth / 2) - (width / 2)
-        const top = (window.innerHeight / 2) - (height / 2)
-        const url = `${API_URL}/api/auth/${provider}?socketId=${socket.id}`
+  useEffect(() => {
+    socket.on(provider, handleProviderLogin);
 
-        return window.open(url, '',
-            `toolbar=no, location=no, directories=no, status=no, menubar=no, 
+    return () => {
+      socket.off(provider, handleProviderLogin);
+    };
+  }, [socket, handleProviderLogin]);
+
+  function checkPopup() {
+    const check = setInterval(() => {
+      if (!popup || popup.closed || popup.closed === undefined) {
+        clearInterval(check);
+        setDisabled(false);
+      }
+    }, 1000);
+  }
+
+  function openPopup() {
+    const width = 600,
+      height = 600;
+    const left = window.innerWidth / 2 - width / 2;
+    const top = window.innerHeight / 2 - height / 2;
+    const url = `${API_URL}/api/auth/${provider}?socketId=${socket.id}`;
+
+    return window.open(
+      url,
+      "",
+      `toolbar=no, location=no, directories=no, status=no, menubar=no, 
       scrollbars=no, resizable=no, copyhistory=no, width=${width}, 
       height=${height}, top=${top}, left=${left}`
-        )
+    );
+  }
+
+  const startAuth = () => {
+    if (!disabled) {
+      setPopUp(openPopup());
+      checkPopup();
+      setDisabled(true);
     }
+  };
+  let buttonProps = {};
 
-    startAuth = () =>
-    {
-        if (!this.state.disabled)
-        {
-            this.popup = this.openPopup()
-            this.checkPopup()
-            this.setState({ disabled: true })
-        }
-    }
+  if (disabled) buttonProps = { disabled: true };
 
-    render()
-    {
-        const { disabled } = this.state
-        const { provider } = this.props
-        const { user } = this.context
-
-        let buttonProps = {};
-        if (disabled)
-            buttonProps = { disabled: true }
-
-        return (
-            user ? <Redirect exact to="/" /> :
-                <Button
-                    fullWidth
-                    color="secondary"
-                    variant="contained"
-                    onClick={this.startAuth}
-                    {...buttonProps}
-                >
-                    Login with <Icon className={`fab fa-${provider}`} style={{ marginLeft: '15px' }} />
-                </Button>
-
-        )
-    }
-}
+  return user ? (
+    <Redirect exact to="/" />
+  ) : (
+    <Button
+      fullWidth
+      color="secondary"
+      variant="contained"
+      onClick={() => startAuth()}
+      {...buttonProps}
+    >
+      Login with{" "}
+      <Icon className={`fab fa-${provider}`} style={{ marginLeft: "15px" }} />
+    </Button>
+  );
+};
 
 OAuth.propTypes = {
-    provider: PropTypes.string.isRequired,
-    socket: PropTypes.object.isRequired,
-}
+  provider: PropTypes.string.isRequired,
+};
 
-
-export default OAuth
+export default OAuth;

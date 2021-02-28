@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, Fragment } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { iconLinks } from "../AppSettings";
 import MainContext from "../contexts/main/mainContext";
@@ -7,12 +7,13 @@ import { SNACKBAR_AUTO_HIDE_DURATION } from "../AppSettings";
 import asyncRequestSender from "../utils/asyncRequestSender";
 import setAuthToken from "../utils/setAuthToken";
 import { AUTH_ROUTE } from "../httpRoutes";
+import AccountMenu from "./AccountMenu";
 
 const Navbar = () => {
   const mainContext = useContext(MainContext);
   const location = useLocation();
   const [isSidenavShowing, toggleSidenav] = useState(false);
-  const { user } = mainContext;
+  const { user, logout } = mainContext;
   const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
@@ -29,8 +30,6 @@ const Navbar = () => {
             autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
           });
           mainContext.login(data);
-          localStorage.setItem("token", data.token);
-          setAuthToken(data.token);
         } else {
           if (status === 401 || status === 400) {
             localStorage.removeItem("token");
@@ -145,24 +144,7 @@ const Navbar = () => {
         )}
       </section>
       <section className="right">
-        {user === null ? (
-          <Link to="/login">Login</Link>
-        ) : (
-          <Fragment>
-            {user?.username ? (
-              <Link to="/profile" id="text-profile-links">
-                {user.username}
-              </Link>
-            ) : (
-              <Link to="/profile" id="text-profile-links">
-                {user.email}
-              </Link>
-            )}
-            <a href="/profile" className="link-icons" id="profile-link-icon">
-              <i className="fas fa-user-circle" />
-            </a>
-          </Fragment>
-        )}
+        {user === null ? <Link to="/login">Login</Link> : <AccountMenu />}
       </section>
     </nav>
   );

@@ -3,7 +3,7 @@ import Comment from "./Comment";
 import { Icon } from "@material-ui/core";
 import Button from "@material-ui/core/Button";
 
-const CommentsSection = ({ comments, noTotalComments }) => {
+const CommentsSection = ({ comments }) => {
   return (
     <Fragment>
       <div className="comment-creation">
@@ -25,21 +25,20 @@ const CommentsSection = ({ comments, noTotalComments }) => {
       {comments.length === 0 && (
         <h3 className="centered-text">No comments yet</h3>
       )}
-      {[0, 1, 2, 3].map((el) => (
-        <Comment />
+      {comments.map((el, index) => (
+        <Comment key={el._id} {...el}/>
       ))}
-      {noTotalComments !== comments.length && (
+      {/* {noTotalComments !== comments.length && (
         <div className="comments-load-more">
           <span>Load more comments</span>
         </div>
-      )}
+      )} */}
     </Fragment>
   );
 };
 
 CommentsSection.defaultProps = {
   comments: [],
-  noTotalComments: 1,
 };
 
 export default CommentsSection;

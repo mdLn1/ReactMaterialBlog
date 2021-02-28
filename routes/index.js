@@ -4,4 +4,5 @@ module.exports = {
   testRoutes: require("./testRoutes"),
   exampleRoutes: require("./exampleRoutes"),
   newsRoutes: require("./newsRoutes"),
+  reportRoutes: require("./reportRoutes"),
 };

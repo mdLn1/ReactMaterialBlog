@@ -1,4 +1,6 @@
 const passport = require('passport')
+if (require("dotenv")) require("dotenv").config();
+
 const User = require("../models/user")
 const { Strategy: GoogleStrategy } = require('passport-google-oauth20')
 const { Strategy: GithubStrategy } = require('passport-github2')
@@ -43,6 +45,15 @@ module.exports = () =>
                     name: profile.displayName,
                     emailConfirmed: true
                 });
+
+                let userCount = 0;
+                try {
+                    userCount = User.estimatedDocumentCount({});
+                } catch (error) {
+                    userCount = 0;
+                } 
+
+                user.username = process.env.DEFAULT_USER_NAMING ? process.env.DEFAULT_USER_NAMING + "" + userCount : "user" + userCount;
 
                 user.save(function (err)
                 {

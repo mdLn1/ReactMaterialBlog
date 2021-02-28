@@ -22,7 +22,6 @@ const {
   deleteNews,
   editNews,
   getAllNews,
-  reportNews,
 } = require("../controllers/newsController");
 
 //@route api/news/
@@ -71,15 +70,6 @@ router.delete(
     asyncMiddlewareExceptionHandler(authorizationMiddleware),
   ],
   exceptionHandler(deleteNews)
-);
-
-//@route api/news/:id/report
-//@desc Report news
-//@access Private and special privileges
-router.post(
-  "/:newsId/report",
-  [authenticationMiddleware],
-  exceptionHandler(reportNews)
 );
 
 module.exports = router;

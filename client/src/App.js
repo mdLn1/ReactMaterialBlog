@@ -21,7 +21,7 @@ import Reports from "./pages/Reports";
 import { SnackbarProvider } from "notistack";
 import CloseIcon from "@material-ui/icons/Close";
 import IconButton from "@material-ui/core/IconButton";
-import setAuthToken from './utils/setAuthToken'
+import { SocketContext, socket } from "./contexts/socket/socket";
 
 axios.defaults.baseURL = API_URL;
 axios.defaults.headers.post["Content-Type"] = "application/json";
@@ -59,48 +59,50 @@ const App = () => {
   return (
     <Router>
       <MainState>
-        <MuiThemeProvider theme={theme}>
-          <SnackbarProvider
-            maxSnack={4}
-            ref={notistackRef}
-            action={(key) => (
-              <ColorIconButton
-                aria-label="close"
-                size="small"
-                onClick={onClickDismiss(key)}
-              >
-                <CloseIcon fontSize="inherit" />
-              </ColorIconButton>
-            )}
-            anchorOrigin={{
-              vertical: "bottom",
-              horizontal: "center",
-            }}
-          >
-            <div style={{ position: "relative" }}>
-              <header></header>
-              <Navbar />
-              <div style={{ padding: "1rem" }}>
-                <Switch>
-                  <Route path="/about-me" component={AboutMe} />
-                  <Route path="/reports" component={Reports} />
-                  <Route path="/login" component={Login} />
-                  <Route path="/register" component={Register} />
-                  <Route
-                    path="/reset-password/:hash"
-                    component={PasswordReset}
-                  />
-                  <Route
-                    path="/confirm-email/:hash"
-                    component={EmailConfirmed}
-                  />
-                  <Route path="/post/:id" component={ViewPost} />
-                  <Route path="/" component={Home} />
-                </Switch>
+        <SocketContext.Provider value={socket}>
+          <MuiThemeProvider theme={theme}>
+            <SnackbarProvider
+              maxSnack={4}
+              ref={notistackRef}
+              action={(key) => (
+                <ColorIconButton
+                  aria-label="close"
+                  size="small"
+                  onClick={onClickDismiss(key)}
+                >
+                  <CloseIcon fontSize="inherit" />
+                </ColorIconButton>
+              )}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "center",
+              }}
+            >
+              <div style={{ position: "relative" }}>
+                <header></header>
+                <Navbar />
+                <div style={{ padding: "1rem" }}>
+                  <Switch>
+                    <Route path="/about-me" component={AboutMe} />
+                    <Route path="/reports" component={Reports} />
+                    <Route path="/login" component={Login} />
+                    <Route path="/register" component={Register} />
+                    <Route
+                      path="/reset-password/:hash"
+                      component={PasswordReset}
+                    />
+                    <Route
+                      path="/confirm-email/:hash"
+                      component={EmailConfirmed}
+                    />
+                    <Route path="/post/:id" component={ViewPost} />
+                    <Route path="/" component={Home} />
+                  </Switch>
+                </div>
               </div>
-            </div>
-          </SnackbarProvider>
-        </MuiThemeProvider>
+            </SnackbarProvider>
+          </MuiThemeProvider>
+        </SocketContext.Provider>
       </MainState>
     </Router>
   );

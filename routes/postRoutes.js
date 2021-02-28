@@ -6,10 +6,10 @@ const {
 } = require("../utils");
 const {
   createPost,
-  getAllPosts,
+  getPosts,
   deletePost,
   editPost,
-  reportPost,
+  getPostById,
 } = require("../controllers/postController");
 const {
   authenticationMiddleware,
@@ -28,7 +28,12 @@ const {
 //@route api/posts/
 //@desc Get all the posts
 //@access Public
-router.get("/", exceptionHandler(getAllPosts));
+router.get("/", exceptionHandler(getPosts));
+
+//@route api/posts/:postId
+//@desc Get all the posts
+//@access Public
+router.get("/:postId", exceptionHandler(getPostById));
 
 //@route api/posts/
 //@desc Create a post
@@ -71,15 +76,6 @@ router.delete(
     asyncMiddlewareExceptionHandler(authorizationMiddleware),
   ],
   exceptionHandler(deletePost)
-);
-
-//@route api/posts/:id
-//@desc Report a post
-//@access Private and special privileges
-router.post(
-  "/:postId/report",
-  [authenticationMiddleware],
-  exceptionHandler(reportPost)
 );
 
 module.exports = router;

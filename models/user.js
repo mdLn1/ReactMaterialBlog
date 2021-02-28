@@ -2,7 +2,7 @@ let mongoose = require("mongoose");
 let Schema = mongoose.Schema;
 
 let userSchema = new Schema({
-  username: { type: String },
+  username: { type: String, required: true },
   password: { type: String },
   email: { type: String, required: true },
   displayEmail: { type: Boolean, default: false },
@@ -19,7 +19,6 @@ let userSchema = new Schema({
   emailConfirmationHash: { type: String },
   emailConfirmed: { type: Boolean, default: false },
   registrationDate: { type: Date, default: Date.now },
-  postDeleted: { type: Boolean, default: false },
   commentsReported: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -32,7 +31,7 @@ let userSchema = new Schema({
       ref: "Posts",
     },
   ],
-  publishedPosts: [
+  postsLiked: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Posts",

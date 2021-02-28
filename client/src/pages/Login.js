@@ -1,5 +1,4 @@
 import React, { useState, useEffect, Fragment, useContext } from "react";
-import io from "socket.io-client";
 import Avatar from "@material-ui/core/Avatar";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Button from "@material-ui/core/Button";
@@ -15,7 +14,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import { isEmailAddressValid } from "../utils/customValidators";
 import ValidationTextField from "../components/customizedElements/ValidationTextField";
 import Copyright from "../components/customizedElements/Copyright";
-import { API_URL, providers } from "../AppSettings";
+import { providers } from "../AppSettings";
 import OAuth from "../components/OAuth";
 import { AUTH_ROUTE } from "../httpRoutes";
 import {
@@ -27,8 +26,6 @@ import { useSnackbar } from "notistack";
 import { SNACKBAR_AUTO_HIDE_DURATION } from "../AppSettings";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import MainContext from "../contexts/main/mainContext";
-
-const socket = io(API_URL);
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -77,10 +74,6 @@ export default function SignIn() {
       toggleEmailAddressError(false);
     }
   };
-
-  useEffect(() => {
-    return () => socket.disconnect();
-  }, []);
 
   const validatePassword = ({ target: { value } }) => {
     setPassword(value);
@@ -268,7 +261,7 @@ export default function SignIn() {
               <Grid container spacing={3}>
                 {providers.map((provider) => (
                   <Grid key={provider} item xs={12} sm={6} md={6} lg={6}>
-                    <OAuth provider={provider} socket={socket} />
+                    <OAuth provider={provider} />
                   </Grid>
                 ))}
               </Grid>

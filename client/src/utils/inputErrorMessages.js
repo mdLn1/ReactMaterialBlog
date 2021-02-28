@@ -19,3 +19,4 @@ export const NEWS_START_DATE_ERROR = "Start date cannot be a date in the past.";
 export const NEWS_END_DATE_ERROR =
   "End date cannot be a date before start date.";
 export const NEWS_WRAP_LINK_ERROR = "A valid link must start with https://";
+export const  REPORT_REASON_ERROR = "Reason must be between 10 and 300 characters."

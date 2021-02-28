@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useState, useContext } from "react";
 import PropTypes from "prop-types";
 import ReactMarkdown from "react-markdown";
 import { containsMDImage } from "../utils/matchMDImagePattern";
@@ -7,24 +7,31 @@ import Tooltip from "@material-ui/core/Tooltip";
 import MultipleOptionsMenu from "./MultipleOptionsMenu";
 import { secondary } from "../AppColors";
 import PostForm from "./PostForm";
+import moment from "moment";
+import MainContext from "../contexts/main/mainContext";
 
 const MainPost = ({
   title,
   content,
-  datePosted,
+  postedDate,
   author,
   pinned,
   likes,
-  noTotalComments,
-  id,
+  edited,
+  comments,
+  _id: postId,
 }) => {
+  const mainContext = useContext(MainContext);
+
   const [dropped, setDrop] = useState(false);
   const [pinApplied, setPin] = useState(pinned);
   const [isPostBeingEdited, toggleEditMode] = useState(false);
   const [isLiked, toggleLike] = useState(false);
   const [linkCopied, toggleLinkCopy] = useState(false);
   const [showPostActions, toggleShowActions] = useState(false);
-  
+
+  const { user } = mainContext;
+
   function copyLink() {
     toggleLinkCopy(true);
     setTimeout(() => {
@@ -44,6 +51,7 @@ const MainPost = ({
       <PostForm
         isBeingEdited
         title={title}
+        postId={postId}
         content={content}
         cancelAction={() => toggleEditMode(false)}
         successAction={() => toggleEditMode(false)}
@@ -93,9 +101,11 @@ const MainPost = ({
 
         <h1>
           {" "}
-          <Link to={`/post/${id}`}>{title}</Link>
+          <Link to={`/post/${postId}`}>{title}</Link>
         </h1>
-        <small>Posted on {datePosted}</small>
+        <small>
+          Posted {moment(postedDate).fromNow()} {edited && "(edited)"}
+        </small>
       </section>
       <hr />
       <section className="main-post-content">
@@ -129,7 +139,7 @@ const MainPost = ({
       </section>
       <section className="main-post-footer">
         <span className="main-post-user-engagement">
-          {isLiked ? (
+          {user?.id && likes.indexOf(user.id) ? (
             <Tooltip title="You liked this post!" arrow interactive>
               <i
                 className="fas fa-thumbs-up"
@@ -145,12 +155,12 @@ const MainPost = ({
             </Tooltip>
           )}
           <span className="total-items-indicator">{likes}</span>
-          <Link to={`/post/${id}`}>
+          <Link to={`/post/${postId}`}>
             <Tooltip title="Comments" arrow interactive>
               <i className="far fa-comment"></i>
             </Tooltip>
           </Link>
-          <span className="total-items-indicator">{noTotalComments}</span>
+          <span className="total-items-indicator">{comments.length}</span>
         </span>
         <span className="main-post-social-shares">
           <MultipleOptionsMenu
@@ -175,19 +185,19 @@ const MainPost = ({
 MainPost.propTypes = {
   title: PropTypes.string.isRequired,
   content: PropTypes.string.isRequired,
-  author: PropTypes.string.isRequired,
+  author: PropTypes.object.isRequired,
 };
 
 MainPost.defaultProps = {
   title: "Title",
   content:
     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, ![image food](https://iso.500px.com/wp-content/uploads/2014/06/W4A2827-1-3000x2000.jpg) when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum",
-  author: "author",
-  datePosted: new Date().toUTCString(),
+  author: { name: "author" },
+  postedDate: new Date().toUTCString(),
   pinned: false,
-  likes: 12,
-  noTotalComments: 1,
-  id: 1,
+  likes: new Array(12),
+  comments: new Array(1),
+  _id: 1,
 };
 
 export default MainPost;

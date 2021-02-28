@@ -1,11 +1,14 @@
 if (require("dotenv")) require("dotenv").config();
 const News = require("../models/news");
 const User = require("../models/user");
-const { isNewsContentValid, isNewsTitleValid } = require("../utils/customValidators");
+const {
+  isNewsContentValid,
+  isNewsTitleValid,
+} = require("../utils/customValidators");
 const HttpError = require("../utils/httpError");
 
 async function createNews(req, res) {
-  const { title, content, link, displayStartDate, displayEndDate } = req.body;
+  const { title, content, link, displayFromDate, displayUntilDate } = req.body;
 
   const user = await User.findById(req.user.id, "email username name _id");
 
@@ -13,8 +16,8 @@ async function createNews(req, res) {
     title,
     content,
     link,
-    displayEndDate,
-    displayStartDate,
+    displayUntilDate,
+    displayFromDate,
     author: user,
   });
 
@@ -75,30 +78,4 @@ async function deleteNews(req, res) {
   res.status(204).end();
 }
 
-async function reportNews(req, res) {
-  const { newsId } = req.query;
-  const { reason } = req.body;
-
-  if (!newsId || typeof newsId !== "string")
-    throw new HttpError("News not found");
-
-  const reporter = await User.findById(req.user.id, "_id");
-
-  if (!reporter)
-    throw new HttpError("You need to be authenticated to make a report.", 401);
-
-  const foundNews = await News.findById(newsId, "_id");
-
-  if (!foundNews) throw new HttpError("Post not found", 404);
-
-  foundNews.reports.push({ reason: reason, reportedBy: reporter });
-
-  await foundNews.save();
-
-  reporter.postsReported.push(foundNews);
-
-  await reporter.save();
-
-  res.status(204).end();
-}
-module.exports = { createNews, getAllNews, editNews, deleteNews, reportNews };
+module.exports = { createNews, getAllNews, editNews, deleteNews };

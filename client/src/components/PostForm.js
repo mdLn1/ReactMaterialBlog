@@ -1,4 +1,4 @@
-import React, { useState, Fragment } from "react";
+import React, { useState, Fragment, useContext } from "react";
 import ReactMde from "react-mde";
 import * as Showdown from "showdown";
 import "react-mde/lib/styles/css/react-mde-all.css";
@@ -23,6 +23,7 @@ import {
 } from "../utils/inputErrorMessages";
 import asyncRequestSender from "../utils/asyncRequestSender";
 import { useSnackbar } from "notistack";
+import MainContext from "../contexts/main/mainContext";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -51,11 +52,14 @@ const PostForm = ({
   isBeingEdited,
   title,
   content,
+  postId,
   cancelAction,
   successAction,
 }) => {
   const classes = useStyles();
   const { enqueueSnackbar } = useSnackbar();
+  const mainContext = useContext(MainContext);
+  const { updatePost } = mainContext;
 
   let newPostTitleProps = {};
   let submissionButtonProps = { disabled: true };
@@ -82,8 +86,9 @@ const PostForm = ({
         content: postContent,
       };
       const { isSuccess, errors, data, status } = isBeingEdited
-        ? await asyncRequestSender(POST_ROUTE, requestData, 2)
+        ? await asyncRequestSender(POST_ROUTE + `${postId}`, requestData, 2)
         : await asyncRequestSender(POST_ROUTE, requestData, 1);
+
       if (isSuccess) {
         enqueueSnackbar(
           isBeingEdited
@@ -91,6 +96,7 @@ const PostForm = ({
             : "You've posted new content.",
           { variant: "success" }
         );
+        if (isBeingEdited) updatePost(postId, postContent, postTitle);
         if (successAction) successAction();
       } else {
         if (status === 400) {

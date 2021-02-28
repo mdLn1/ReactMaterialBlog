@@ -1,20 +1,21 @@
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useState, useContext, useEffect } from "react";
 import PropTypes from "prop-types";
 import ReactMarkdown from "react-markdown";
 import CommentsSection from "./CommentsSection";
 import Tooltip from "@material-ui/core/Tooltip";
 import MultipleOptionsMenu from "./MultipleOptionsMenu";
 import { secondary } from "../AppColors";
-import PostForm from './PostForm'
+import PostForm from "./PostForm";
+import moment from "moment";
 
 const SinglePost = ({
   title,
   content,
-  datePosted,
-  author,
-  pinned,
+  postedDate,
   likes,
-  noTotalComments,
+  comments,
+  edited,
+  pinned
 }) => {
   const [pinApplied, setPin] = useState(pinned);
   const [isPostBeingEdited, toggleEditMode] = useState(false);
@@ -81,7 +82,9 @@ const SinglePost = ({
           />
         </span>
         <h1>{title}</h1>
-        <small>Posted on {datePosted}</small>
+        <small>
+          Posted {moment(postedDate).fromNow()} {edited && "(edited)"}
+        </small>
       </section>
       <hr />
       <section className="main-post-content">
@@ -104,11 +107,11 @@ const SinglePost = ({
               ></i>
             </Tooltip>
           )}
-          <span className="total-items-indicator">{likes}</span>
+          <span className="total-items-indicator">{likes?.length}</span>
           <Tooltip title="Comments" arrow interactive>
             <i className="far fa-comment"></i>
           </Tooltip>
-          <span className="total-items-indicator">{noTotalComments}</span>
+          <span className="total-items-indicator">{comments?.length}</span>
         </span>
         <span className="main-post-social-shares">
           <MultipleOptionsMenu
@@ -127,7 +130,7 @@ const SinglePost = ({
         </span>
       </section>
       <section className="single-post-comments">
-        <CommentsSection />
+        {comments?.length && <CommentsSection comments={comments} />}
       </section>
     </article>
   );
@@ -136,18 +139,17 @@ const SinglePost = ({
 SinglePost.propTypes = {
   title: PropTypes.string.isRequired,
   content: PropTypes.string.isRequired,
-  author: PropTypes.string.isRequired,
+  author: PropTypes.object.isRequired,
 };
 
 SinglePost.defaultProps = {
   title: "Title",
   content:
     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, ![image food](https://iso.500px.com/wp-content/uploads/2014/06/W4A2827-1-3000x2000.jpg) when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum",
-  author: "author",
-  datePosted: new Date().toUTCString(),
+  author: {},
+  postedDate: new Date().toUTCString(),
   pinned: false,
-  likes: 12,
-  noTotalComments: 1,
+  likes: new Array(10),
 };
 
 export default SinglePost;

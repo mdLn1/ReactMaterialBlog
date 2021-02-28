@@ -1,5 +1,5 @@
 const express = require("express");
-require("dotenv").config();
+if (require("dotenv")) require("dotenv").config();
 
 const app = express();
 const xss = require("xss-clean");
@@ -12,6 +12,7 @@ const {
   postRoutes,
   testRoutes,
   newsRoutes,
+  reportRoutes,
 } = require("./routes");
 const compression = require("compression");
 const helmet = require("helmet");
@@ -82,6 +83,8 @@ app.use("/api/auth", apiLimiter, authRoutes);
 app.use("/api/posts", apiLimiter, postRoutes);
 
 app.use("/api/news", apiLimiter, newsRoutes);
+
+app.use("/api/reports", apiLimiter, reportRoutes);
 
 app.use("/api", apiLimiter, testRoutes);
 

@@ -11,17 +11,8 @@ let newsSchema = new Schema({
   postedDate: { type: Date, default: Date.now },
   edited: { type: Boolean, default: false },
   link: { type: String },
-  displayStartDate: { type: Date, required: true },
-  displayEndDate: { type: Date, required: true },
-  outcomeDecided: { type: Boolean },
-  outcomeDate: { type: Date },
-  reports: [
-    {
-      reportedBy: { type: String, required: true },
-      reason: { type: String, required: true },
-      reportedDate: { type: Date, default: Date.now },
-    },
-  ],
+  displayFromDate: { type: Date, required: true },
+  displayUntilDate: { type: Date, required: true },
   previousVersions: [
     {
       title: { type: String, required: true },

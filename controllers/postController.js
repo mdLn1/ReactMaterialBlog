@@ -1,7 +1,11 @@
 if (require("dotenv")) require("dotenv").config();
 const Post = require("../models/post");
 const User = require("../models/user");
-const { isPostContentValid, isPostTitleValid } = require("../utils/customValidators");
+const Comment = require("../models/comment");
+const {
+  isPostContentValid,
+  isPostTitleValid,
+} = require("../utils/customValidators");
 const HttpError = require("../utils/httpError");
 
 async function createPost(req, res) {
@@ -17,16 +21,12 @@ async function createPost(req, res) {
 
   await newPost.save();
 
-  user.publishedPosts.push(newPost);
-
-  await user.save();
-
   res.status(201).json({ post: newPost });
 }
 
 async function editPost(req, res) {
   const { title, content } = req.body;
-  const { postId } = req.query;
+  const { postId } = req.params;
 
   if (!postId || typeof postId !== "string")
     throw new HttpError("Post not found");
@@ -47,17 +47,74 @@ async function editPost(req, res) {
     isPostEdited = true;
   }
 
-  if (isPostEdited) await foundPost.save();
-
-  res.status(201).json({ post: newPost });
+  if (isPostEdited) {
+    foundPost.edited = true;
+    await foundPost.save();
+    await Post.updateOne(
+      {
+        _id: postId,
+      },
+      {
+        $push: {
+          previousVersions: { title: title, content: content },
+        },
+      }
+    );
+  }
+  res.status(200).json({ post: foundPost });
 }
 
-async function getAllPosts(req, res) {
-  res.status(200).json({ posts: await Post.find({}) });
+async function getPosts(req, res) {
+  let { sortOrder, pageNumber } = req.query;
+
+  if (!pageNumber) pageNumber = 1;
+
+  if (!sortOrder || ALLOWED_MONGO_SORT_FILTERS.indexOf(sortOrder) === -1) sortOrder = -1;
+
+  let totalResults = await Report.countDocuments({
+    contentReportedType: type,
+    dismissed: false,
+  });
+
+  const totalPages = Math.ceil(totalResults / DEFAULT_PAGES_SIZE);
+
+  if (totalPages < pageNumber) pageNumber = totalPages;
+
+  let results = await Post.find({ deleted: false })
+    .populate("author", "name username _id ")
+    .skip(DEFAULT_PAGES_SIZE * (pageNumber - 1))
+    .limit(DEFAULT_PAGES_SIZE)
+    // default descending
+    .sort({ postedDate: sortOrder ? sortOrder : -1 });
+
+  res.status(200).json({
+    posts: results,
+  });
+}
+
+async function getPostById(req, res) {
+  const { postId } = req.params;
+
+  if (!postId || typeof postId !== "string")
+    throw new HttpError("Post not found");
+
+  const foundPost = await Post.findById(postId, "-reports")
+    .populate("author", "name username _id ")
+    .populate("previousVersions");
+
+  if (!foundPost) throw new HttpError("Post not found");
+
+  const comments = await Comment.find({ postId: postId })
+    .populate("author", "_id username")
+    .sort({ postedDate: "desc" });
+
+  foundPost.comments = comments;
+
+  res.status(200).json(foundPost);
 }
 
 async function deletePost(req, res) {
-  const { postId } = req.query;
+  const { postId } = req.params;
 
   if (!postId || typeof postId !== "string")
     throw new HttpError("Post not found");
@@ -69,6 +126,8 @@ async function deletePost(req, res) {
   } else {
     const postDeleted = await Post.findById(postId);
 
+    if (!postDeleted) throw new HttpError("Failed to delete post", 400);
+
     postDeleted.deleted = true;
 
     await postDeleted.save();
@@ -76,31 +135,10 @@ async function deletePost(req, res) {
   res.status(204).end();
 }
 
-async function reportPost(req, res) {
-  const { postId } = req.query;
-  const { reason } = req.body;
-
-  if (!postId || typeof postId !== "string")
-    throw new HttpError("Post not found");
-
-  const reporter = await User.findById(req.user.id, "_id");
-
-  if (!reporter)
-    throw new HttpError("You need to be authenticated to make a report.", 401);
-
-  const foundPost = await Post.findById(postId, "_id");
-
-  if (!foundPost) throw new HttpError("Post not found", 404);
-
-  foundPost.reports.push({ reason: reason, reportedBy: reporter });
-
-  await foundPost.save();
-
-  reporter.postsReported.push(foundPost);
-
-  await reporter.save();
-
-  res.status(204).end();
-}
-
-module.exports = { createPost, getAllPosts, editPost, deletePost, reportPost };
+module.exports = {
+  createPost,
+  getPosts,
+  editPost,
+  deletePost,
+  getPostById,
+};

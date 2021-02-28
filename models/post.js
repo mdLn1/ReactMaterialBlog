@@ -11,29 +11,17 @@ let postSchema = new Schema({
   postedDate: { type: Date, default: Date.now },
   pinned: { type: Boolean },
   edited: { type: Boolean, default: false },
-  comments: [
+  likes: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Comments",
-    },
-  ],
-  outcomeDecided: { type: Boolean },
-  outcomeDate: { type: Date },
-  reports: [
-    {
-      reportedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Users'
-      },
-      reason: { type: String, required: true },
-      reportedDate: { type: Date, default: Date.now },
+      ref: "Users",
     },
   ],
   previousVersions: [
     {
       title: { type: String, required: true },
       content: { type: String, required: true },
-      dateEdited: { type: Date, required: true },
+      dateEdited: { type: Date, default: Date.now },
     },
   ],
 });

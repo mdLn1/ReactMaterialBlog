@@ -8,6 +8,11 @@ export const REGISTER_SUCCESS = "REGISTER_SUCCESS"
 export const REGISTER_FAILED = "REGISTER_FAILED"
 
 export const LOGOUT = "LOGOUT"
+export const ADD_POSTS = "ADD_POSTS"
+export const EDITED_POST = "EDITED_POST"
+export const SET_CURRENT_POST = "SET_CURRENT_POST"
+export const ADD_NEWS = "ADD_NEWS"
+export const EDITED_NEWS = "EDITED_NEWS"
 
 export const TEST = "TEST"
 

@@ -20,9 +20,9 @@ async function confirmEmail(req, res) {
 }
 
 async function createUser(req, res) {
-  const { username, email, password, displayEmail } = req.body;
-
-  if (await User.isUsernameNotAvailable(username))
+  const { email, password, displayEmail } = req.body;
+  let { username } = req.body;
+  if (username && (await User.isUsernameNotAvailable(username)))
     throw new HttpError("Username is already taken", 400);
 
   if (await User.isEmailAddressAlreadyUsed(email))
@@ -31,7 +31,17 @@ async function createUser(req, res) {
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
   const confHash = await bcrypt.hash("confHash", salt);
-
+  let userCount = 0;
+  if (!username) {
+    try {
+      userCount = await User.estimatedDocumentCount({});
+    } catch (error) {
+      userCount = 0;
+    }
+    username = process.env.DEFAULT_USER_NAMING
+      ? process.env.DEFAULT_USER_NAMING + "" + userCount
+      : "user" + userCount;
+  }
   let newUser = new User({
     username,
     email,
@@ -82,9 +92,13 @@ async function loginUser(req, res) {
   const { email, password } = req.body;
   const user = await User.findOne(
     { email: new RegExp(email, "i") },
-    "email _id name username photoUrl displayEmail emailConfirmed password"
+    "email _id name username photoUrl emailConfirmed password"
   );
-  if (!user || !(await bcrypt.compare(password, user.password)))
+  if (
+    !user ||
+    !user.password ||
+    !(await bcrypt.compare(password, user.password))
+  )
     throw new HttpError(
       "Invalid credentials, please make sure you typed everything correctly",
       400
@@ -99,19 +113,19 @@ async function loginUser(req, res) {
   let userDTO = {
     name: user.name,
     username: user.username,
-    displayEmail: user.displayEmail,
     photoUrl: user.photoUrl,
     emailConfirmed: user.emailConfirmed,
+    email: user.email,
+    id: user._id,
   };
 
-  if (user.displayEmail) userDTO.email = user.email;
   res.status(200).json({ user: userDTO, token });
 }
 
 async function getUser(req, res) {
   const user = await User.findById(
     req.user.id,
-    "email _id name username photoUrl displayEmail emailConfirmed password"
+    "email _id name username photoUrl emailConfirmed password"
   );
   if (!user) throw new HttpError("User not found.", 401);
   const payload = { id: user._id };
@@ -119,17 +133,17 @@ async function getUser(req, res) {
     expiresIn: "60d",
   });
 
-  if (!token) throw new HttpError("Could not create token, please try again later", 500);
+  if (!token)
+    throw new HttpError("Could not create token, please try again later", 500);
 
   let userDTO = {
     name: user.name,
     username: user.username,
-    displayEmail: user.displayEmail,
     photoUrl: user.photoUrl,
     emailConfirmed: user.emailConfirmed,
+    email: user.email,
   };
 
-  if (user.displayEmail) userDTO.email = user.email;
   res.status(200).json({ user: userDTO, token });
 }
 

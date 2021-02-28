@@ -10,7 +10,7 @@ const News = ({ title, content }) => {
 
   return showEditPost ? (
     <NewsForm
-      isEditing
+      isBeingEdited
       title={title}
       content={content}
       cancelAction={() => toggleEditPost(false)}

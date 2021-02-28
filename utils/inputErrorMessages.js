@@ -19,6 +19,10 @@ const NEWS_START_DATE_ERROR = "Start date cannot be a date in the past.";
 const NEWS_END_DATE_ERROR = "End date cannot be a date before start date.";
 const NEWS_WRAP_LINK_ERROR = "A valid link must start with https://";
 
+const COMMENT_CONTENT_ERROR =
+  "Content must be at least 4 characters long before submission (maximum 300).";
+const  REPORT_REASON_ERROR = "Reason must be between 10 and 300 characters."
+
 module.exports = {
   USERNAME_ERROR,
   EMAIL_ADDRESS_ERROR,
@@ -32,4 +36,6 @@ module.exports = {
   NEWS_START_DATE_ERROR,
   NEWS_END_DATE_ERROR,
   NEWS_WRAP_LINK_ERROR,
+  COMMENT_CONTENT_ERROR,
+  REPORT_REASON_ERROR
 };

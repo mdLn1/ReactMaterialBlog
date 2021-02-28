@@ -133,7 +133,7 @@ router.post(
   [
     check("username", "Please enter a username at least 4 characters long")
       .trim()
-      .custom((val) => isUsernameValid(val)),
+      .custom((val) => val ? isUsernameValid(val) : true),
     check("email", "Please enter a valid email address")
       .trim()
       .custom((val) => isEmailAddressValid(val)),
