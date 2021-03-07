@@ -8,9 +8,17 @@ let postSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Users",
   },
+  hidden: { type: Boolean, default: false },
+  deleted: { type: Boolean, default: false },
   postedDate: { type: Date, default: Date.now },
   pinned: { type: Boolean },
   edited: { type: Boolean, default: false },
+  comments: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Comments",
+    },
+  ],
   likes: [
     {
       type: mongoose.Schema.Types.ObjectId,

@@ -12,6 +12,8 @@ import {
   TEST,
   LOGIN_SUCCESS,
   LOGOUT,
+  CREATE_REPORT,
+  CLOSE_REPORT,
 } from "../types";
 import setAuthToken from "../../utils/setAuthToken";
 
@@ -26,6 +28,7 @@ export default (props) => {
     news: [],
     token: null,
     testObj: "something",
+    report: { open: false, contentType: "", contentId: "" },
   };
 
   const [state, dispatch] = useReducer(mainReducer, initialState);
@@ -67,6 +70,14 @@ export default (props) => {
     dispatch({ type: SET_CURRENT_POST, payload: post });
   };
 
+  const createReport = (contentType, contentId) => {
+    dispatch({ type: CREATE_REPORT, payload: { contentType, contentId } });
+  };
+
+  const closeReport = () => {
+    dispatch({ type: CLOSE_REPORT, payload: null });
+  };
+
   const registerUser = (user) => registerUserDef(user, dispatch);
   const test = (user) => testFramework(user, dispatch);
 
@@ -81,6 +92,7 @@ export default (props) => {
         posts: state.posts,
         currentPost: state.currentPost,
         news: state.news,
+        report: state.report,
         test,
         login,
         oAuthLogin,
@@ -89,6 +101,8 @@ export default (props) => {
         addNews,
         updatePost,
         setCurrentPost,
+        createReport,
+        closeReport,
       }}
     >
       {props.children}

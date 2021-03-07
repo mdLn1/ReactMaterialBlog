@@ -7,6 +7,8 @@ import MultipleOptionsMenu from "./MultipleOptionsMenu";
 import { secondary } from "../AppColors";
 import PostForm from "./PostForm";
 import moment from "moment";
+import MainContext from "../contexts/main/mainContext";
+import { CONTENT_TYPES } from "../constants";
 
 const SinglePost = ({
   title,
@@ -15,13 +17,18 @@ const SinglePost = ({
   likes,
   comments,
   edited,
-  pinned
+  pinned,
+  _id,
 }) => {
+  const mainContext = useContext(MainContext);
+
   const [pinApplied, setPin] = useState(pinned);
   const [isPostBeingEdited, toggleEditMode] = useState(false);
   const [isLiked, toggleLike] = useState(false);
   const [linkCopied, toggleLinkCopy] = useState(false);
   const [showPostActions, toggleShowActions] = useState(false);
+
+  const { createReport } = mainContext;
 
   function copyLink() {
     toggleLinkCopy(true);
@@ -69,13 +76,15 @@ const SinglePost = ({
                 },
               },
               {
-                fontAwesomeIcon: "fas fa-trash-alt delete",
-                text: "Delete",
-                action: () => {},
-              },
-              {
                 fontAwesomeIcon: "fas fa-flag",
                 text: "Report",
+                action: () => {
+                  createReport(CONTENT_TYPES[0], _id);
+                },
+              },
+              {
+                fontAwesomeIcon: "fas fa-trash-alt delete",
+                text: "Delete",
                 action: () => {},
               },
             ]}
@@ -130,7 +139,7 @@ const SinglePost = ({
         </span>
       </section>
       <section className="single-post-comments">
-        {comments?.length && <CommentsSection comments={comments} />}
+        <CommentsSection comments={comments} />
       </section>
     </article>
   );

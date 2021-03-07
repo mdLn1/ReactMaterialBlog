@@ -70,11 +70,12 @@ const NewsForm = ({
   isBeingEdited,
   content,
   title,
-  fromDate,
-  untilDate,
+  displayFromDate,
+  displayUntilDate,
   wrapLink,
   cancelAction,
   successAction,
+  newsId,
 }) => {
   // setup
   const classes = useStyles();
@@ -91,10 +92,10 @@ const NewsForm = ({
   const [newsTitle, setNewsTitle] = useState(isBeingEdited ? title : "");
   const [newsContent, setNewsContent] = useState(isBeingEdited ? content : "");
   const [selectedStartDate, setSelectedStartDate] = React.useState(
-    isBeingEdited ? fromDate : new Date()
+    isBeingEdited ? new Date(displayFromDate) : new Date()
   );
   const [selectedEndDate, setSelectedEndDate] = React.useState(
-    isBeingEdited ? untilDate : new Date()
+    isBeingEdited ? new Date(displayUntilDate) : new Date()
   );
   const [newsWrapLink, setWrapLink] = React.useState(
     isBeingEdited ? wrapLink : ""
@@ -159,7 +160,7 @@ const NewsForm = ({
       };
 
       const { isSuccess, errors, status, data } = isBeingEdited
-        ? await asyncRequestSender(NEWS_ROUTE, requestData, 2)
+        ? await asyncRequestSender(NEWS_ROUTE + newsId, requestData, 2)
         : await asyncRequestSender(NEWS_ROUTE, requestData, 1);
       if (isSuccess) {
         enqueueSnackbar(

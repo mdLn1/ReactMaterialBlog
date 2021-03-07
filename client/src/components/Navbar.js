@@ -60,7 +60,7 @@ const Navbar = () => {
         <Link to="/">Home</Link>
         <Link to="/about-me">About Me</Link>
         <Link to="/about-me">Settings</Link>
-        <Link to="/about-me">Reports</Link>
+        <Link to="/reports">Reports</Link>
         <i
           className="fas fa-bars"
           onClick={() => {

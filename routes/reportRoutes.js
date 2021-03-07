@@ -14,6 +14,7 @@ const { REPORT_REASON_ERROR } = require("../utils/inputErrorMessages");
 const {
   createReport,
   getReports,
+  getReportsByContentId,
   dismissReport,
 } = require("../controllers/reportController");
 const { isReportReasonValid } = require("../utils/customValidators");
@@ -31,10 +32,34 @@ router.get(
 );
 
 //@route api/reports/
+//@desc Get reports
+//@access Private and special privileges
+router.get(
+  "/",
+  [
+    authenticationMiddleware,
+    asyncMiddlewareExceptionHandler(authorizationMiddleware),
+  ],
+  exceptionHandler(getReports)
+);
+
+//@route api/reports/:contentId
+//@desc Get reports by content Id
+//@access Private and special privileges
+router.get(
+  "/:contentId",
+  [
+    authenticationMiddleware,
+    asyncMiddlewareExceptionHandler(authorizationMiddleware),
+  ],
+  exceptionHandler(getReportsByContentId)
+);
+
+//@route api/reports/
 //@desc Create a report
 //@access Private
 router.post(
-  "/:type/:contentId",
+  "/:contentType/:contentId",
   [
     check("reason", REPORT_REASON_ERROR)
       .trim()

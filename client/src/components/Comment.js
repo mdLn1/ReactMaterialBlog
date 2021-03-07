@@ -1,17 +1,23 @@
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useContext } from "react";
 import PropTypes from "prop-types";
 import MultipleOptionsMenu from "./MultipleOptionsMenu";
 import moment from "moment";
+import MainContext from "../contexts/main/mainContext";
+import { CONTENT_TYPES } from "../constants";
 
+const Comment = ({ _id, author, postedDate, content, edited }) => {
+  const mainContext = useContext(MainContext);
 
-const Comment = ({ author, postedDate, content, edited }) => {
+  const { createReport } = mainContext;
 
   return (
     <Fragment>
       <div className="comment">
         <div className="comment-header">
           <span className="author">{author.username}</span>
-          <span className="date-posted">{moment(postedDate).fromNow()} {edited && "(edited)"}</span>
+          <span className="date-posted">
+            {moment(postedDate).fromNow()} {edited && "(edited)"}
+          </span>
           <span className="comment-options">
             <MultipleOptionsMenu
               iconStyle={{ fontSize: ".8rem" }}
@@ -22,13 +28,15 @@ const Comment = ({ author, postedDate, content, edited }) => {
                   action: () => {},
                 },
                 {
-                  fontAwesomeIcon: "fas fa-trash-alt delete",
-                  text: "Delete",
-                  action: () => {},
-                },
-                {
                   fontAwesomeIcon: "fas fa-flag",
                   text: "Report",
+                  action: () => {
+                    createReport(CONTENT_TYPES[2], _id);
+                  },
+                },
+                {
+                  fontAwesomeIcon: "fas fa-trash-alt delete",
+                  text: "Delete",
                   action: () => {},
                 },
               ]}

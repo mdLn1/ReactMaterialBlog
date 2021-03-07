@@ -7,6 +7,10 @@ const {
   isPostTitleValid,
 } = require("../utils/customValidators");
 const HttpError = require("../utils/httpError");
+const {
+  DEFAULT_PAGES_SIZE,
+  ALLOWED_MONGO_SORT_FILTERS,
+} = require("../utils/constants");
 
 async function createPost(req, res) {
   const { title, content } = req.body;
@@ -71,12 +75,11 @@ async function getPosts(req, res) {
 
   if (!sortOrder || ALLOWED_MONGO_SORT_FILTERS.indexOf(sortOrder) === -1) sortOrder = -1;
 
-  let totalResults = await Report.countDocuments({
-    contentReportedType: type,
-    dismissed: false,
+  let totalResults = await Post.countDocuments({
+    deleted: false
   });
 
-  const totalPages = Math.ceil(totalResults / DEFAULT_PAGES_SIZE);
+  const totalPages = Math.ceil(totalResults / DEFAULT_PAGES_SIZE) || 1;
 
   if (totalPages < pageNumber) pageNumber = totalPages;
 

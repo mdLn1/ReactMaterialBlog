@@ -2,19 +2,41 @@ if (require("dotenv")) require("dotenv").config();
 const User = require("../models/user");
 const HttpError = require("../utils/httpError");
 const Comment = require("../models/comment");
+const Post = require("../models/post");
 const { isCommentContentValid } = require("../utils/customValidators");
 
 async function createComment(req, res) {
   const { content } = req.body;
 
+  const { postId } = req.params;
+
+  if (!postId || typeof postId !== "string")
+    throw new HttpError("Post not found");
+
+  const foundPost = await Post.findById(postId, "_id");
+
+  if (!foundPost) throw new HttpError("Post not found");
+
   const user = await User.findById(req.user.id, "username _id");
 
   let newComment = new Comment({
     content,
+    postId: foundPost,
     author: user,
   });
 
   await newComment.save();
+
+  await Post.updateOne(
+    {
+      _id: postId,
+    },
+    {
+      $push: {
+        comments: newComment._id,
+      },
+    }
+  );
 
   res.status(201).json({ comment: newComment });
 }
@@ -26,7 +48,7 @@ async function getComments(req, res) {
     .populate("author", "_id username")
     .sort({ postedDate: "desc" });
 
-  res.status(200).json({ comments: comments });
+  res.status(200).json({ comments: commentsFound });
 }
 
 async function editComment(req, res) {
@@ -67,6 +89,5 @@ async function editComment(req, res) {
   }
   res.status(200).json({ post: foundComment });
 }
-
 
 module.exports = { createComment, getComments, editComment };

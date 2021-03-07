@@ -12,10 +12,24 @@ import {
   ADD_NEWS,
   EDITED_NEWS,
   SET_CURRENT_POST,
+  CLOSE_REPORT,
+  CREATE_REPORT,
 } from "../types";
 
 export default (state, action) => {
   switch (action.type) {
+    case CREATE_REPORT:
+      return {
+        ...state,
+        report: { open: true, ...action.payload },
+        loading: false,
+      };
+    case CLOSE_REPORT:
+      return {
+        ...state,
+        report: { open: false, contentTye: "", contentId: "" },
+        loading: false,
+      };
     case LOGIN_SUCCESS:
       return { ...state, ...action.payload, loading: false };
     case LOGIN_FAILED:

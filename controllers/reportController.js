@@ -14,45 +14,58 @@ const {
 async function createReport(req, res) {
   const { reason } = req.body;
 
-  let { contentId, type } = req.params;
+  let { contentId, contentType } = req.params;
 
   if (
-    !type &&
-    typeof type === "string" &&
-    CONTENT_TYPES.findIndex(type.toLowerCase()) === -1
+    !contentType &&
+    typeof contentType === "string" &&
+    CONTENT_TYPES.findIndex(contentType.toLowerCase()) === -1
   )
     throw new HttpError(
       `Content type must match one of the following ${CONTENT_TYPES.join(",")}`,
       400
     );
 
-  type = type.toLowerCase();
+  contentType = contentType.toLowerCase();
   let content = null;
 
   // for a post
-  if (type === CONTENT_TYPES[0]) {
+  if (contentType === CONTENT_TYPES[0]) {
     content = await Post.findById(contentId, "_id");
   }
 
   // for news
-  if (type === CONTENT_TYPES[1]) {
+  if (contentType === CONTENT_TYPES[1]) {
     content = await News.findById(contentId, "_id");
   }
 
   // for a comment
-  if (type === CONTENT_TYPES[2]) {
+  if (contentType === CONTENT_TYPES[2]) {
     content = await Comment.findById(contentId, "_id");
   }
 
-  if (!content) throw new HttpError(`Reported ${type} not found`);
+  if (!content) throw new HttpError(`Reported ${contentType} not found`);
 
   const user = await User.findById(req.user.id, "_id");
 
   if (!user)
-    throw new HttpError(`Could not find the user reporting this ${type}`);
+    throw new HttpError(
+      `Could not find the user reporting this ${contentType}`
+    );
+
+  const foundReport = await Report.findOne({
+    contentId: contentId,
+    contentReportedType: contentType,
+    author: user,
+  });
+
+  if (foundReport)
+    throw new HttpError(
+      `You already submitted a report for this ${contentType}`
+    );
 
   const newReport = new Report({
-    contentReportedType: type,
+    contentReportedType: contentType,
     contentId: contentId,
     author: user,
     reason: reason,
@@ -64,7 +77,7 @@ async function createReport(req, res) {
 }
 
 async function getReports(req, res) {
-  let { sortOrder, pageNumber, type } = req.query;
+  let { sortOrder, pageNumber, contentType, dismissed } = req.query;
 
   if (!pageNumber) pageNumber = 1;
 
@@ -72,30 +85,29 @@ async function getReports(req, res) {
     sortOrder = -1;
 
   if (
-    !type &&
-    typeof type === "string" &&
-    CONTENT_TYPES.indexOf(type.toLowerCase()) === -1
+    typeof contentType === "string" &&
+    CONTENT_TYPES.indexOf(contentType.toLowerCase()) === -1
   )
     throw new HttpError(
       `Content type must match one of the following ${CONTENT_TYPES.join(",")}`,
       400
     );
+  let filter = {};
 
-  type = type.toLowerCase();
+  if (contentType) {
+    contentType = contentType.toLowerCase();
+    filter.contentReportedType = contentType;
+  }
 
-  let totalResults = await Report.countDocuments({
-    contentReportedType: type,
-    dismissed: false,
-  });
+  if (dismissed === true || dismissed === false) filter.dismissed = dismissed;
+
+  let totalResults = await Report.countDocuments(filter);
 
   const totalPages = Math.ceil(totalResults / DEFAULT_PAGES_SIZE);
 
   if (totalPages < pageNumber) pageNumber = totalPages;
 
-  let results = await Report.find({
-    contentReportedType: type,
-    dismissed: false,
-  })
+  let results = await Report.find(filter)
     .skip(DEFAULT_PAGES_SIZE * (pageNumber - 1))
     .limit(DEFAULT_PAGES_SIZE)
     // default descending
@@ -104,8 +116,77 @@ async function getReports(req, res) {
   res.status(200).json({
     pageNumber,
     sortOrder,
+    reports: results,
+    contentType,
+    totalPages: Math.ceil(totalResults / DEFAULT_PAGES_SIZE),
+  });
+}
+
+async function getReportsByContentId(req, res) {
+  const { contentId } = req.params;
+
+  let { sortOrder, pageNumber, contentType, dismissed } = req.query;
+
+  if (!pageNumber) pageNumber = 1;
+
+  if (!sortOrder || ALLOWED_MONGO_SORT_FILTERS.indexOf(sortOrder) === -1)
+    sortOrder = -1;
+
+  if (!contentId) throw new HttpError("You need to provide a content id", 400);
+
+  if (
+    !contentType ||
+    typeof contentType === "string" ||
+    CONTENT_TYPES.indexOf(contentType.toLowerCase()) === -1
+  )
+    throw new HttpError(
+      `Content type must match one of the following ${CONTENT_TYPES.join(",")}`,
+      400
+    );
+
+  contentType = contentType.toLowerCase();
+
+  let totalResults =
+    dismissed === true || dismissed === false
+      ? await Report.countDocuments({
+          _id: contentId,
+          contentReportedType: contentType,
+          dismissed: dismissed,
+        })
+      : await Report.countDocuments({
+          _id: contentId,
+          contentReportedType: contentType,
+        });
+
+  const totalPages = Math.ceil(totalResults / DEFAULT_PAGES_SIZE);
+
+  if (totalPages < pageNumber) pageNumber = totalPages;
+
+  let results =
+    dismissed === true || dismissed === false
+      ? await Report.find({
+          _id: contentId,
+          contentReportedType: contentType,
+          dismissed: dismissed,
+        })
+          .skip(DEFAULT_PAGES_SIZE * (pageNumber - 1))
+          .limit(DEFAULT_PAGES_SIZE)
+          // default descending
+          .sort({ reportedDate: sortOrder ? sortOrder : -1 })
+      : await Report.find({
+          _id: contentId,
+          contentReportedType: contentType,
+        })
+          .skip(DEFAULT_PAGES_SIZE * (pageNumber - 1))
+          .limit(DEFAULT_PAGES_SIZE)
+          // default descending
+          .sort({ reportedDate: sortOrder ? sortOrder : -1 });
+
+  res.status(200).json({
+    pageNumber,
+    sortOrder,
     results,
-    contentType: type,
+    contentType,
     totalPages: Math.ceil(totalResults / DEFAULT_PAGES_SIZE),
   });
 }
@@ -130,4 +211,5 @@ module.exports = {
   createReport,
   getReports,
   dismissReport,
+  getReportsByContentId,
 };

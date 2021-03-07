@@ -28,11 +28,6 @@ const CommentsSection = ({ comments }) => {
       {comments.map((el, index) => (
         <Comment key={el._id} {...el}/>
       ))}
-      {/* {noTotalComments !== comments.length && (
-        <div className="comments-load-more">
-          <span>Load more comments</span>
-        </div>
-      )} */}
     </Fragment>
   );
 };

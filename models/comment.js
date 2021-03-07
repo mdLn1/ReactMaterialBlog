@@ -8,7 +8,7 @@ let commentSchema = new Schema({
     ref: "Users",
   },
   postedDate: { type: Date, default: Date.now },
-  postId: { type: String, required: true },
+  postId: { type: mongoose.Schema.Types.ObjectId, required: true },
   edited: { type: Boolean, default: false },
   previousVersions: [
     {

@@ -108,7 +108,6 @@ export default function MenuListComposition() {
                   <MenuItem
                     onClick={(e) => {
                       history.push(`/about-me`);
-                      logout();
                       handleClose(e);
                     }}
                   >

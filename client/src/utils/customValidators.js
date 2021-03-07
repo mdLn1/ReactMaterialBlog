@@ -43,6 +43,10 @@ export function isWrapLinkValid(val) {
   return true;
 }
 
+export function isReportReasonValid(val) {
+  return val && val.length > 10 && val.length < 301;
+}
+
 export function isStartDateValid(date) {
   const currentDate = new Date();
   // selected date set to a past year

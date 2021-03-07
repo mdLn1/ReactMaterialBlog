@@ -22,6 +22,7 @@ import { SnackbarProvider } from "notistack";
 import CloseIcon from "@material-ui/icons/Close";
 import IconButton from "@material-ui/core/IconButton";
 import { SocketContext, socket } from "./contexts/socket/socket";
+import Report from "./components/Report";
 
 axios.defaults.baseURL = API_URL;
 axios.defaults.headers.post["Content-Type"] = "application/json";
@@ -81,6 +82,7 @@ const App = () => {
               <div style={{ position: "relative" }}>
                 <header></header>
                 <Navbar />
+                <Report />
                 <div style={{ padding: "1rem" }}>
                   <Switch>
                     <Route path="/about-me" component={AboutMe} />

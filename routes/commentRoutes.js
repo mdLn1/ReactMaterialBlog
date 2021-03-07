@@ -22,11 +22,11 @@ const { COMMENT_CONTENT_ERROR } = require("../utils/inputErrorMessages");
 //@access Public
 router.get("/", exceptionHandler(getComments));
 
-//@route api/comments/
+//@route api/comments/:postId
 //@desc Create a comment
 //@access Private
 router.post(
-  "/",
+  "/:postId",
   [
     check("content", COMMENT_CONTENT_ERROR)
       .trim()

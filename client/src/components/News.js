@@ -1,18 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import PropTypes from "prop-types";
 import MultipleOptionsMenu from "./MultipleOptionsMenu";
 import ReactMarkdown from "react-markdown";
 import NewsForm from "./NewsForm";
+import MainContext from "../contexts/main/mainContext";
+import { CONTENT_TYPES } from "../constants";
 
-const News = ({ title, content }) => {
+const News = ({ _id, title, content, displayFromDate, displayUntilDate }) => {
   const [showNewsActions, toggleNewsActions] = useState(false);
   const [showEditPost, toggleEditPost] = useState(false);
+  const mainContext = useContext(MainContext);
+  const { createReport } = mainContext;
 
   return showEditPost ? (
     <NewsForm
       isBeingEdited
       title={title}
       content={content}
+      newsId={_id}
+      displayFromDate={displayFromDate}
+      displayUntilDate={displayUntilDate}
       cancelAction={() => toggleEditPost(false)}
       successAction={() => toggleEditPost(false)}
     />
@@ -34,13 +41,15 @@ const News = ({ title, content }) => {
               },
             },
             {
-              fontAwesomeIcon: "fas fa-trash-alt delete",
-              text: "Delete",
-              action: () => {},
-            },
-            {
               fontAwesomeIcon: "fas fa-flag",
               text: "Report",
+              action: () => {
+                createReport(CONTENT_TYPES[1], _id);
+              },
+            },
+            {
+              fontAwesomeIcon: "fas fa-trash-alt delete",
+              text: "Delete",
               action: () => {},
             },
           ]}

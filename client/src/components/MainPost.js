@@ -9,6 +9,8 @@ import { secondary } from "../AppColors";
 import PostForm from "./PostForm";
 import moment from "moment";
 import MainContext from "../contexts/main/mainContext";
+import { CONTENT_TYPES } from "../constants";
+import { REPORT_REASON_ERROR } from "../utils/inputErrorMessages";
 
 const MainPost = ({
   title,
@@ -30,20 +32,13 @@ const MainPost = ({
   const [linkCopied, toggleLinkCopy] = useState(false);
   const [showPostActions, toggleShowActions] = useState(false);
 
-  const { user } = mainContext;
+  const { user, createReport } = mainContext;
 
   function copyLink() {
     toggleLinkCopy(true);
     setTimeout(() => {
       toggleLinkCopy(false);
     }, 3000);
-  }
-
-  function toggleActions() {
-    toggleShowActions(true);
-    setTimeout(() => {
-      toggleShowActions(false);
-    }, 5000);
   }
 
   return isPostBeingEdited ? (
@@ -86,13 +81,15 @@ const MainPost = ({
                 },
               },
               {
-                fontAwesomeIcon: "fas fa-trash-alt delete",
-                text: "Delete",
-                action: () => {},
-              },
-              {
                 fontAwesomeIcon: "fas fa-flag",
                 text: "Report",
+                action: () => {
+                  createReport(CONTENT_TYPES[0], postId);
+                },
+              },
+              {
+                fontAwesomeIcon: "fas fa-trash-alt delete",
+                text: "Delete",
                 action: () => {},
               },
             ]}

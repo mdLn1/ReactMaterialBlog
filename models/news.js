@@ -10,7 +10,7 @@ let newsSchema = new Schema({
   },
   postedDate: { type: Date, default: Date.now },
   edited: { type: Boolean, default: false },
-  link: { type: String },
+  link: { type: String, default: "" },
   displayFromDate: { type: Date, required: true },
   displayUntilDate: { type: Date, required: true },
   previousVersions: [
