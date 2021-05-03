@@ -1,5 +1,5 @@
 import React from "react";
-import MultipleOptionsMenu from "../components/MultipleOptionsMenu";
+import MultipleOptionsMenu from "../components/customizedElements/MultipleOptionsMenu";
 
 const AboutMe = () => {
   return (

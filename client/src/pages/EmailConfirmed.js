@@ -4,6 +4,7 @@ import { Link, useParams, useLocation } from "react-router-dom";
 import Grid from "@material-ui/core/Grid";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import { useSnackbar } from "notistack";
+import axios from "axios";
 import Box from "@material-ui/core/Box";
 import VerifiedUserOutlinedIcon from "@material-ui/icons/VerifiedUserOutlined";
 import ErrorOutlinedIcon from "@material-ui/icons/ErrorOutlined";
@@ -13,7 +14,7 @@ import { secondary, success, error } from "../AppColors";
 import { makeStyles } from "@material-ui/core/styles";
 import Copyright from "../components/customizedElements/Copyright";
 import { AUTH_ROUTE } from "../httpRoutes";
-import asyncRequestSender from "../utils/asyncRequestSender";
+import { asyncRequestErrorHandler } from "../utils/asyncRequestHelper";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -42,10 +43,23 @@ const EmailConfirmed = () => {
   const location = useLocation();
   const { enqueueSnackbar } = useSnackbar();
   const [responseErrors, setResponseErrors] = useState([]);
-
+  const source = axios.CancelToken.source();
   const [successfullyVerified, setSuccessfullyVerified] = useState(false);
-  const verifyEmail = async () => {
-    toggleLoading(true);
+
+  // events
+  useEffect(() => {
+    verifyEmail();
+  }, [location]);
+
+  useEffect(() => {
+    return () => {
+      toggleLoading(false);
+      source.cancel();
+    };
+  }, []);
+
+  // action handlers
+  const verifyEmail = () => {
     const currentHref = window.location.href;
     const [_, hash] = currentHref.split("confirm-email/");
     if (hash.length < 10) {
@@ -54,27 +68,35 @@ const EmailConfirmed = () => {
       const requestData = {
         confirmationHash: hash,
       };
-      const { isSuccess, errors, status, data } = await asyncRequestSender(
-        AUTH_ROUTE + "confirm-email",
-        requestData,
-        1
-      );
-      if (isSuccess) {
-        enqueueSnackbar("You've confirmed your email.", { variant: "success" });
-        setSuccessfullyVerified(true);
-      } else {
-        if (status === 400) {
-          setResponseErrors(errors);
-        } else {
-          errors.forEach((el) => enqueueSnackbar(el, { variant: "error" }));
-        }
-      }
+
+      toggleLoading(true);
+      axios
+        .post(AUTH_ROUTE + "confirm-email", requestData, {
+          cancelToken: source.token,
+        })
+        .then((response) => {
+          enqueueSnackbar("You've confirmed your email.", {
+            variant: "success",
+          });
+          setSuccessfullyVerified(true);
+        })
+        .catch((error) => {
+          if (axios.isCancel(error)) {
+            console.log("request canceled");
+          } else {
+            const { errors, status } = asyncRequestErrorHandler(error);
+            if (status === 400) {
+              setResponseErrors(errors);
+            } else {
+              errors.forEach((el) => enqueueSnackbar(el, { variant: "error" }));
+            }
+          }
+        })
+        .finally(() => {
+          toggleLoading(false);
+        });
     }
-    toggleLoading(false);
   };
-  useEffect(() => {
-    verifyEmail();
-  }, [location]);
 
   return (
     <Container component="main" maxWidth="xs">

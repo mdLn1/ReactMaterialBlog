@@ -1,19 +1,8 @@
-import React, { useState, useRef, Fragment } from "react";
+import React, { useState, Fragment } from "react";
 import "react-mde/lib/styles/css/react-mde-all.css";
-import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
-import {
-  Grow,
-  Grid,
-  ButtonGroup,
-  Paper,
-  Popper,
-  MenuItem,
-  MenuList,
-  Button,
-  Icon,
-  ClickAwayListener,
-} from "@material-ui/core";
-import PostForm from "./PostForm";
+import { Grid, Button, Icon } from "@material-ui/core";
+import PostForm from "./posts/PostForm";
+import SplitButton from "../components/customizedElements/SplitButton";
 
 const options = [
   "Default Sort",
@@ -24,29 +13,12 @@ const options = [
 ];
 
 const TopHomePage = (props) => {
-  const [open, setOpen] = useState(false);
-  const anchorRef = useRef(null);
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  // state changes
   const [isNewPostFormShown, toggleNewPostForm] = useState(false);
 
-  const handleClick = () => {
-    console.info(`You clicked ${options[selectedIndex]}`);
-  };
-
-  const handleMenuItemClick = (event, index) => {
-    setSelectedIndex(index);
-    setOpen(false);
-  };
-
-  const handleToggle = () => {
-    setOpen((prevOpen) => !prevOpen);
-  };
-
-  const handleClose = (event) => {
-    if (anchorRef.current && anchorRef.current.contains(event.target)) {
-      return;
-    }
-    setOpen(false);
+  // action handlers
+  const handleSearch = (searchOption) => {
+    console.log(searchOption);
   };
 
   return (
@@ -71,64 +43,12 @@ const TopHomePage = (props) => {
               </Button>
             </Grid>
           )}
-          <Grid container xs={6} sm={6} md={6} justify="flex-end">
+          <Grid container item xs={6} sm={6} md={6} justify="flex-end">
             <Grid item>
-              <ButtonGroup
-                variant="contained"
-                color="primary"
-                ref={anchorRef}
-                aria-label="split button"
-              >
-                <Button variant="contained" onClick={handleClick}>
-                  {options[selectedIndex]}
-                </Button>
-                <Button
-                  color="primary"
-                  size="small"
-                  aria-controls={open ? "split-button-menu" : undefined}
-                  aria-expanded={open ? "true" : undefined}
-                  aria-label="select merge strategy"
-                  aria-haspopup="menu"
-                  onClick={handleToggle}
-                >
-                  <ArrowDropDownIcon />
-                </Button>
-              </ButtonGroup>
-              <Popper
-                open={open}
-                anchorEl={anchorRef.current}
-                role={undefined}
-                transition
-                disablePortal
-              >
-                {({ TransitionProps, placement }) => (
-                  <Grow
-                    {...TransitionProps}
-                    style={{
-                      transformOrigin:
-                        placement === "bottom" ? "center top" : "center bottom",
-                    }}
-                  >
-                    <Paper>
-                      <ClickAwayListener onClickAway={handleClose}>
-                        <MenuList id="split-button-menu">
-                          {options.map((option, index) => (
-                            <MenuItem
-                              key={option}
-                              selected={index === selectedIndex}
-                              onClick={(event) =>
-                                handleMenuItemClick(event, index)
-                              }
-                            >
-                              {option}
-                            </MenuItem>
-                          ))}
-                        </MenuList>
-                      </ClickAwayListener>
-                    </Paper>
-                  </Grow>
-                )}
-              </Popper>
+              <SplitButton
+                options={options}
+                selectedItemIndexChanged={handleSearch}
+              />
             </Grid>
           </Grid>
         </Grid>

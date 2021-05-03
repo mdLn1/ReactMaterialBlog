@@ -7,12 +7,14 @@ const {
 const {
   createComment,
   getComments,
-  editComment
+  editComment,
+  getCommentById,
 } = require("../controllers/commentController");
 const {
   authenticationMiddleware,
   authorizationMiddleware,
   errorCheckerMiddleware,
+  userCreateContentMiddleware,
 } = require("../middleware");
 const { isCommentContentValid } = require("../utils/customValidators");
 const { COMMENT_CONTENT_ERROR } = require("../utils/inputErrorMessages");
@@ -21,6 +23,11 @@ const { COMMENT_CONTENT_ERROR } = require("../utils/inputErrorMessages");
 //@desc Get all the comments
 //@access Public
 router.get("/", exceptionHandler(getComments));
+
+//@route api/comments/:commentId
+//@desc Get the comment by id
+//@access Public
+router.get("/:commentId", exceptionHandler(getCommentById));
 
 //@route api/comments/:postId
 //@desc Create a comment
@@ -33,6 +40,7 @@ router.post(
       .custom((val) => isCommentContentValid(val)),
     errorCheckerMiddleware,
     authenticationMiddleware,
+    asyncMiddlewareExceptionHandler(userCreateContentMiddleware),
   ],
   exceptionHandler(createComment)
 );
@@ -44,6 +52,7 @@ router.patch(
   "/:commentId",
   [
     authenticationMiddleware,
+    asyncMiddlewareExceptionHandler(userCreateContentMiddleware),
     asyncMiddlewareExceptionHandler(authorizationMiddleware),
   ],
   exceptionHandler(editComment)

@@ -1,4 +1,4 @@
-import React, { useState, Fragment, useContext } from "react";
+import React, { useState, Fragment, useContext, useEffect } from "react";
 import ReactMde from "react-mde";
 import * as Showdown from "showdown";
 import "react-mde/lib/styles/css/react-mde-all.css";
@@ -9,21 +9,22 @@ import {
   Grid,
   CircularProgress,
 } from "@material-ui/core";
+import axios from "axios";
+import { asyncRequestErrorHandler } from "../../utils/asyncRequestHelper";
 import { makeStyles } from "@material-ui/core/styles";
-import ValidationTextField from "./customizedElements/ValidationTextField";
-import CustomContainedButton from "./customizedElements/CustomContainedButton";
-import { POST_ROUTE } from "../httpRoutes";
+import ValidationTextField from "../customizedElements/ValidationTextField";
+import CustomContainedButton from "../customizedElements/CustomContainedButton";
+import { POST_ROUTE } from "../../httpRoutes";
 import {
   isPostContentValid,
   isPostTitleValid,
-} from "../utils/customValidators";
+} from "../../utils/customValidators";
 import {
   POST_TITLE_ERROR,
   POST_CONTENT_ERROR,
-} from "../utils/inputErrorMessages";
-import asyncRequestSender from "../utils/asyncRequestSender";
+} from "../../utils/inputErrorMessages";
 import { useSnackbar } from "notistack";
-import MainContext from "../contexts/main/mainContext";
+import MainContext from "../../contexts/main/mainContext";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -60,6 +61,7 @@ const PostForm = ({
   const { enqueueSnackbar } = useSnackbar();
   const mainContext = useContext(MainContext);
   const { updatePost } = mainContext;
+  const source = axios.CancelToken.source();
 
   let newPostTitleProps = {};
   let submissionButtonProps = { disabled: true };
@@ -71,6 +73,16 @@ const PostForm = ({
   const [isLoading, toggleLoading] = useState(false);
 
   const [selectedTab, setSelectedTab] = useState("write");
+
+  // events
+  useEffect(() => {
+    return () => {
+      toggleLoading(false);
+      source.cancel();
+    };
+  }, []);
+
+  // action handlers
 
   const validatePostTitle = ({ target: { value } }) => {
     setPostTitle(value);
@@ -85,31 +97,51 @@ const PostForm = ({
         title: postTitle,
         content: postContent,
       };
-      const { isSuccess, errors, data, status } = isBeingEdited
-        ? await asyncRequestSender(POST_ROUTE + `${postId}`, requestData, 2)
-        : await asyncRequestSender(POST_ROUTE, requestData, 1);
 
-      if (isSuccess) {
-        enqueueSnackbar(
-          isBeingEdited
-            ? "You've saved the changes."
-            : "You've posted new content.",
-          { variant: "success" }
-        );
-        if (isBeingEdited) updatePost(postId, postContent, postTitle);
-        if (successAction) successAction();
+      let axiosRequestConfig = {
+        data: requestData,
+        cancelToken: source.token,
+      };
+
+      if (isBeingEdited) {
+        axiosRequestConfig.url = POST_ROUTE + postId;
+        axiosRequestConfig.method = "patch";
       } else {
-        if (status === 400) {
-          setResponseErrors(errors);
-        } else {
-          errors.forEach((el) => enqueueSnackbar(el, { variant: "error" }));
-        }
+        axiosRequestConfig.url = POST_ROUTE;
+        axiosRequestConfig.method = "post";
       }
+
+      axios
+        .request(axiosRequestConfig)
+        .then((response) => {
+          enqueueSnackbar(
+            isBeingEdited
+              ? "You've saved the changes."
+              : "You've posted new content.",
+            { variant: "success" }
+          );
+          if (isBeingEdited) updatePost(postId, postContent, postTitle);
+          if (successAction) successAction();
+        })
+        .catch((error) => {
+          if (axios.isCancel(error)) {
+            console.log("request canceled");
+          } else {
+            const { errors, status } = asyncRequestErrorHandler(error);
+            if (status === 400) {
+              setResponseErrors(errors);
+            } else {
+              errors.forEach((el) => enqueueSnackbar(el, { variant: "error" }));
+            }
+          }
+        })
+        .finally(() => {
+          toggleLoading(false);
+        });
     } else {
       togglePostContentError(!isPostContentValid(postContent));
       togglePostTitleError(!isPostTitleValid(postTitle));
     }
-    toggleLoading(false);
   };
 
   if (isPostTitleError) {

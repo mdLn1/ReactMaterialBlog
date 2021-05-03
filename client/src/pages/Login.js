@@ -1,14 +1,17 @@
 import React, { useState, useEffect, Fragment, useContext } from "react";
-import Avatar from "@material-ui/core/Avatar";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import Button from "@material-ui/core/Button";
-import Checkbox from "@material-ui/core/Checkbox";
 import { Link } from "react-router-dom";
-import Grid from "@material-ui/core/Grid";
-import Box from "@material-ui/core/Box";
+import {
+  Grid,
+  Checkbox,
+  FormControlLabel,
+  Button,
+  Avatar,
+  Box,
+  Typography,
+  Container,
+} from "@material-ui/core";
 import LockOutlinedIcon from "@material-ui/icons/LockOutlined";
-import Typography from "@material-ui/core/Typography";
-import Container from "@material-ui/core/Container";
+import axios from "axios";
 import { secondary } from "../AppColors";
 import { makeStyles } from "@material-ui/core/styles";
 import { isEmailAddressValid } from "../utils/customValidators";
@@ -21,7 +24,7 @@ import {
   EMAIL_ADDRESS_ERROR,
   PASSWORD_LOGIN_ERROR,
 } from "../utils/inputErrorMessages";
-import asyncRequestSender from "../utils/asyncRequestSender";
+import { asyncRequestErrorHandler } from "../utils/asyncRequestHelper";
 import { useSnackbar } from "notistack";
 import { SNACKBAR_AUTO_HIDE_DURATION } from "../AppSettings";
 import CircularProgress from "@material-ui/core/CircularProgress";
@@ -54,6 +57,7 @@ export default function SignIn() {
   const classes = useStyles();
   const { enqueueSnackbar } = useSnackbar();
   const mainContext = useContext(MainContext);
+  const source = axios.CancelToken.source();
 
   let emailFieldProps = {};
   let passwordFieldProps = {};
@@ -66,6 +70,15 @@ export default function SignIn() {
   const [isPasswordForgotten, togglePasswordForgotten] = useState(false);
   const [responseErrors, setResponseErrors] = useState([]);
 
+  // events
+  useEffect(() => {
+    return () => {
+      toggleLoading(false);
+      source.cancel();
+    };
+  }, []);
+
+  // action handlers
   const validateEmail = ({ target: { value } }) => {
     setEmailAddress(value);
     if (!isEmailAddressValid(value)) {
@@ -84,59 +97,77 @@ export default function SignIn() {
     }
   };
 
-  const login = async () => {
-    toggleLoading(true);
+  const login = () => {
     if (isPasswordForgotten) {
       if (!isEmailAddressValid(emailAddress)) {
         toggleEmailAddressError(true);
-        toggleLoading(false);
         return;
       }
       const requestData = {
         email: emailAddress,
       };
-      const { isSuccess, errors, status, data } = asyncRequestSender(
-        AUTH_ROUTE + "password-forgotten",
-        requestData,
-        1
-      );
-      if (isSuccess) {
-        enqueueSnackbar("Email sent", {
-          variant: "success",
-          autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
+      toggleLoading(true);
+      axios
+        .post(AUTH_ROUTE + "password-forgotten", requestData, {
+          cancelToken: source.token,
+        })
+        .then((response) => {
+          enqueueSnackbar("Email sent", {
+            variant: "success",
+            autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
+          });
+        })
+        .catch((error) => {
+          if (axios.isCancel(error)) {
+            console.log("request canceled");
+          } else {
+            const { errors, status } = asyncRequestErrorHandler(error);
+            if (status === 400) {
+            } else {
+              errors.forEach((el) =>
+                enqueueSnackbar(el, {
+                  variant: "error",
+                  autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
+                })
+              );
+            }
+          }
+        })
+        .finally(() => {
+          toggleLoading(false);
         });
-      } else {
-        if (status === 400) {
-        } else {
-          errors.forEach((el) =>
-            enqueueSnackbar(el, {
-              variant: "error",
-              autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
-            })
-          );
-        }
-      }
     } else {
       if (isEmailAddressValid(emailAddress) && password.length > 5) {
         const requestData = {
           email: emailAddress,
           password,
         };
-        const { isSuccess, errors, status, data } = await asyncRequestSender(
-          AUTH_ROUTE + "login",
-          requestData,
-          1
-        );
-        if (isSuccess) {
-          enqueueSnackbar("You've logged in.", { variant: "success" });
-          mainContext.login(data);
-        } else {
-          if (status === 400) {
-            setResponseErrors(errors);
-          } else {
-            errors.forEach((el) => enqueueSnackbar(el, { variant: "error" }));
-          }
-        }
+        toggleLoading(true);
+        axios
+          .post(AUTH_ROUTE + "login", requestData, {
+            cancelToken: source.token,
+          })
+          .then((response) => {
+            enqueueSnackbar("You've logged in.", { variant: "success" });
+            mainContext.login(response.data);
+          })
+          .catch((error) => {
+            if (axios.isCancel(error)) {
+              console.log("request canceled");
+            } else {
+              const { errors, status } = asyncRequestErrorHandler(error);
+              if (status === 400) {
+                setResponseErrors(errors);
+              } else {
+                errors.forEach((el) =>
+                  enqueueSnackbar(el, { variant: "error" })
+                );
+              }
+            }
+          })
+          .finally(() => {
+            toggleLoading(false);
+          });
       } else {
         if (!isEmailAddressValid(emailAddress)) {
           toggleEmailAddressError(true);
@@ -147,7 +178,6 @@ export default function SignIn() {
         }
       }
     }
-    toggleLoading(false);
   };
 
   const swapLoginForgotPassword = () => {

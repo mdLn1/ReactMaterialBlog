@@ -22,7 +22,7 @@ import { SnackbarProvider } from "notistack";
 import CloseIcon from "@material-ui/icons/Close";
 import IconButton from "@material-ui/core/IconButton";
 import { SocketContext, socket } from "./contexts/socket/socket";
-import Report from "./components/Report";
+import Report from "./components/reports/Report";
 
 axios.defaults.baseURL = API_URL;
 axios.defaults.headers.post["Content-Type"] = "application/json";

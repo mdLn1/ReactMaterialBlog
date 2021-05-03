@@ -77,12 +77,15 @@ async function createReport(req, res) {
 }
 
 async function getReports(req, res) {
-  let { sortOrder, pageNumber, contentType, dismissed } = req.query;
+  let { sortOrder, pageNumber, pageSize, contentType, dismissed } = req.query;
 
   if (!pageNumber) pageNumber = 1;
-
   if (!sortOrder || ALLOWED_MONGO_SORT_FILTERS.indexOf(sortOrder) === -1)
     sortOrder = -1;
+
+  if (typeof pageSize !== "number" || pageSize < 1) {
+    pageSize = DEFAULT_PAGES_SIZE;
+  }
 
   if (
     typeof contentType === "string" &&
@@ -103,13 +106,13 @@ async function getReports(req, res) {
 
   let totalResults = await Report.countDocuments(filter);
 
-  const totalPages = Math.ceil(totalResults / DEFAULT_PAGES_SIZE);
+  const totalPages = Math.ceil(totalResults / pageSize);
 
   if (totalPages < pageNumber) pageNumber = totalPages;
 
   let results = await Report.find(filter)
-    .skip(DEFAULT_PAGES_SIZE * (pageNumber - 1))
-    .limit(DEFAULT_PAGES_SIZE)
+    .skip(pageSize * (pageNumber - 1))
+    .limit(pageSize)
     // default descending
     .sort({ reportedDate: sortOrder ? sortOrder : -1 });
 
@@ -117,26 +120,31 @@ async function getReports(req, res) {
     pageNumber,
     sortOrder,
     reports: results,
-    contentType,
-    totalPages: Math.ceil(totalResults / DEFAULT_PAGES_SIZE),
+    contentType: contentType ? contentType : "ALL TYPES",
+    totalPages: Math.ceil(totalResults / pageSize),
+    totalReportsCount: totalResults,
   });
 }
 
 async function getReportsByContentId(req, res) {
   const { contentId } = req.params;
 
-  let { sortOrder, pageNumber, contentType, dismissed } = req.query;
+  let { sortOrder, pageNumber, pageSize, contentType, dismissed } = req.query;
 
-  if (!pageNumber) pageNumber = 1;
+  if (!pageNumber || !isNaN(pageNumber)) pageNumber = 1;
 
   if (!sortOrder || ALLOWED_MONGO_SORT_FILTERS.indexOf(sortOrder) === -1)
     sortOrder = -1;
 
   if (!contentId) throw new HttpError("You need to provide a content id", 400);
 
+  if (typeof pageSize !== "number" || pageSize < 1) {
+    pageSize = DEFAULT_PAGES_SIZE;
+  }
+
   if (
     !contentType ||
-    typeof contentType === "string" ||
+    typeof contentType !== "string" ||
     CONTENT_TYPES.indexOf(contentType.toLowerCase()) === -1
   )
     throw new HttpError(
@@ -147,47 +155,50 @@ async function getReportsByContentId(req, res) {
   contentType = contentType.toLowerCase();
 
   let totalResults =
-    dismissed === true || dismissed === false
+    typeof dismissed === "boolean"
       ? await Report.countDocuments({
-          _id: contentId,
+          contentId: contentId,
           contentReportedType: contentType,
           dismissed: dismissed,
         })
       : await Report.countDocuments({
-          _id: contentId,
+          contentId: contentId,
           contentReportedType: contentType,
         });
 
-  const totalPages = Math.ceil(totalResults / DEFAULT_PAGES_SIZE);
+  const totalPages = Math.ceil(totalResults / pageSize);
 
   if (totalPages < pageNumber) pageNumber = totalPages;
 
+  let skipVal = pageSize * (pageNumber - 1);
+
   let results =
-    dismissed === true || dismissed === false
+    typeof dismissed === "boolean"
       ? await Report.find({
-          _id: contentId,
+          contentId: contentId,
           contentReportedType: contentType,
           dismissed: dismissed,
         })
-          .skip(DEFAULT_PAGES_SIZE * (pageNumber - 1))
-          .limit(DEFAULT_PAGES_SIZE)
+          .skip(skipVal)
+          .limit(pageSize)
           // default descending
-          .sort({ reportedDate: sortOrder ? sortOrder : -1 })
+          .sort({ reportedDate: sortOrder })
       : await Report.find({
-          _id: contentId,
+          contentId: contentId,
           contentReportedType: contentType,
         })
-          .skip(DEFAULT_PAGES_SIZE * (pageNumber - 1))
-          .limit(DEFAULT_PAGES_SIZE)
+          .skip(skipVal)
+          .limit(pageSize)
           // default descending
-          .sort({ reportedDate: sortOrder ? sortOrder : -1 });
+          .sort({ reportedDate: sortOrder });
 
   res.status(200).json({
     pageNumber,
     sortOrder,
-    results,
+    reports: results,
     contentType,
-    totalPages: Math.ceil(totalResults / DEFAULT_PAGES_SIZE),
+    totalPages: Math.ceil(totalResults / pageSize),
+    totalReportsCount: totalResults,
   });
 }
 

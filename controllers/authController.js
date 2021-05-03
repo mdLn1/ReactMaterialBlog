@@ -77,14 +77,6 @@ async function createUser(req, res) {
     );
   }
 
-  const payload = { id: newUser._id };
-
-  const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: "60d",
-  });
-
-  if (!token) throw new Error("Could not create token, please try to login");
-
   res.status(201).json();
 }
 
@@ -268,7 +260,7 @@ function google(req, res) {
 
   if (req.user.localUsername) user.username = req.user.localUsername;
 
-  const token = jwt.sign(user, process.env.JWT_SECRET, {
+  const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, {
     expiresIn: "1d",
   });
 

@@ -30,9 +30,25 @@ async function getAllNews(req, res) {
   res.status(200).json({ news: await News.find({}) });
 }
 
+async function getNewsById(req, res) {
+  const { newsId } = req.params;
+
+  if (!newsId || typeof newsId !== "string")
+    throw new HttpError("News not found");
+
+  const foundNews = await News.findById(newsId).populate(
+    "author",
+    "name username _id "
+  );
+
+  if (!foundNews) throw new HttpError("News not found");
+
+  res.status(200).json(foundNews);
+}
+
 async function editNews(req, res) {
   const { title, content } = req.body;
-  const { newsId } = req.query;
+  const { newsId } = req.params;
 
   if (!newsId || typeof newsId !== "string")
     throw new HttpError("News not found");
@@ -55,7 +71,7 @@ async function editNews(req, res) {
 
   if (isNewsEdited) await foundNews.save();
 
-  res.status(201).json({ News: newNews });
+  res.status(200).json({ news: foundNews });
 }
 
 async function deleteNews(req, res) {
@@ -78,4 +94,4 @@ async function deleteNews(req, res) {
   res.status(204).end();
 }
 
-module.exports = { createNews, getAllNews, editNews, deleteNews };
+module.exports = { createNews, getAllNews, getNewsById, editNews, deleteNews };

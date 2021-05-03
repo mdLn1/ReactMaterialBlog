@@ -1,10 +1,10 @@
 import React, { useState, useContext } from "react";
 import PropTypes from "prop-types";
-import MultipleOptionsMenu from "./MultipleOptionsMenu";
+import MultipleOptionsMenu from "../customizedElements/MultipleOptionsMenu";
 import ReactMarkdown from "react-markdown";
 import NewsForm from "./NewsForm";
-import MainContext from "../contexts/main/mainContext";
-import { CONTENT_TYPES } from "../constants";
+import MainContext from "../../contexts/main/mainContext";
+import { CONTENT_TYPES } from "../../constants";
 
 const News = ({ _id, title, content, displayFromDate, displayUntilDate }) => {
   const [showNewsActions, toggleNewsActions] = useState(false);

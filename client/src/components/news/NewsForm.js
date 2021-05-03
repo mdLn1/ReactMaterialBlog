@@ -1,5 +1,5 @@
 // libraries
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import ReactMde from "react-mde";
 import * as Showdown from "showdown";
@@ -19,28 +19,29 @@ import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker,
 } from "@material-ui/pickers";
+import axios from "axios";
 
 // project items
-import { findNumberOfMdImages } from "../utils/matchMDImagePattern";
-import CustomContainedButton from "./customizedElements/CustomContainedButton";
+import { findNumberOfMdImages } from "../../utils/matchMDImagePattern";
+import CustomContainedButton from "../customizedElements/CustomContainedButton";
 import {
   NEWS_CONTENT_ERROR,
   NEWS_TITLE_ERROR,
   NEWS_END_DATE_ERROR,
   NEWS_START_DATE_ERROR,
   NEWS_WRAP_LINK_ERROR,
-} from "../utils/inputErrorMessages";
-import ValidationTextField from "./customizedElements/ValidationTextField";
+} from "../../utils/inputErrorMessages";
+import ValidationTextField from "../customizedElements/ValidationTextField";
 import {
   isStartDateValid,
   isNewsContentValid,
   isNewsTitleValid,
   isWrapLinkValid,
-} from "../utils/customValidators";
-import { compareDates } from "../utils/dateHelper";
-import { NEWS_ROUTE } from "../httpRoutes";
-import asyncRequestSender from "../utils/asyncRequestSender";
-import { SNACKBAR_AUTO_HIDE_DURATION } from "../AppSettings";
+} from "../../utils/customValidators";
+import { compareDates } from "../../utils/dateHelper";
+import { NEWS_ROUTE } from "../../httpRoutes";
+import { asyncRequestErrorHandler } from "../../utils/asyncRequestHelper";
+import { SNACKBAR_AUTO_HIDE_DURATION } from "../../AppSettings";
 
 // styling
 const useStyles = makeStyles((theme) => ({
@@ -80,6 +81,7 @@ const NewsForm = ({
   // setup
   const classes = useStyles();
   const { enqueueSnackbar } = useSnackbar();
+  const source = axios.CancelToken.source();
 
   // fields
   let newsTitleFieldProps = {};
@@ -104,6 +106,14 @@ const NewsForm = ({
 
   const [isNewQuickNewsFormShown, toggleAddNewsForm] = useState(false);
   const [selectedTab, setSelectedTab] = useState("write");
+
+  // events
+  useEffect(() => {
+    return () => {
+      toggleLoading(false);
+      source.cancel();
+    };
+  }, []);
 
   // form values errors
   const [isStartDateError, toggleStartDateError] = useState(false);
@@ -141,9 +151,8 @@ const NewsForm = ({
     else toggleWrapLinkError(!isWrapLinkValid(value));
   };
 
-  const handleNewsSubmit = async (e) => {
+  const handleNewsSubmit = (e) => {
     e.preventDefault();
-    toggleLoading(true);
     if (
       isNewsTitleValid(newsTitle) &&
       isNewsContentValid(newsContent) &&
@@ -159,32 +168,54 @@ const NewsForm = ({
         wrapLink: !newsWrapLink ? "" : newsWrapLink,
       };
 
-      const { isSuccess, errors, status, data } = isBeingEdited
-        ? await asyncRequestSender(NEWS_ROUTE + newsId, requestData, 2)
-        : await asyncRequestSender(NEWS_ROUTE, requestData, 1);
-      if (isSuccess) {
-        enqueueSnackbar(
-          isBeingEdited
-            ? "News updated successfully."
-            : "News created successfully.",
-          {
-            variant: "success",
-            autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
-          }
-        );
-        if (successAction) successAction();
+      let axiosRequestConfig = {
+        data: requestData,
+        cancelToken: source.token,
+      };
+
+      if (isBeingEdited) {
+        axiosRequestConfig.url = NEWS_ROUTE + newsId;
+        axiosRequestConfig.method = "patch";
       } else {
-        if (status === 400) {
-          setResponseErrors(errors);
-        } else {
-          errors.forEach((el) =>
-            enqueueSnackbar(el, {
-              variant: "error",
-              autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
-            })
-          );
-        }
+        axiosRequestConfig.url = NEWS_ROUTE;
+        axiosRequestConfig.method = "post";
       }
+
+      toggleLoading(true);
+      axios
+        .request(axiosRequestConfig)
+        .then((response) => {
+          enqueueSnackbar(
+            isBeingEdited
+              ? "News updated successfully."
+              : "News created successfully.",
+            {
+              variant: "success",
+              autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
+            }
+          );
+          if (successAction) successAction();
+        })
+        .catch((error) => {
+          if (axios.isCancel(error)) {
+            console.log("request canceled");
+          } else {
+            const { errors, status } = asyncRequestErrorHandler(error);
+            if (status === 400) {
+              setResponseErrors(errors);
+            } else {
+              errors.forEach((el) =>
+                enqueueSnackbar(el, {
+                  variant: "error",
+                  autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
+                })
+              );
+            }
+          }
+        })
+        .finally(() => {
+          toggleLoading(false);
+        });
     } else {
       toggleTitleError(!isNewsTitleValid(newsTitle));
       toggleContentError(!isNewsContentValid(newsContent));
@@ -195,7 +226,6 @@ const NewsForm = ({
       if (!newsWrapLink) toggleWrapLinkError(false);
       else toggleWrapLinkError(!isWrapLinkValid(newsWrapLink));
     }
-    toggleLoading(false);
   };
 
   // handling errors display

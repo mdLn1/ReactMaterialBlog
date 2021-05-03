@@ -1,22 +1,16 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, Fragment } from "react";
+import axios from "axios";
 import "react-mde/lib/styles/css/react-mde-all.css";
-import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
-import {
-  Grow,
-  Grid,
-  ButtonGroup,
-  Paper,
-  Popper,
-  MenuItem,
-  MenuList,
-  Button,
-  ClickAwayListener,
-} from "@material-ui/core";
+import { Grid } from "@material-ui/core";
+import Pagination from "@material-ui/lab/Pagination";
 import { REPORT_ROUTE } from "../httpRoutes";
-import asyncRequestSender from "../utils/asyncRequestSender";
+import { asyncRequestErrorHandler } from "../utils/asyncRequestHelper";
 import { useSnackbar } from "notistack";
-import MainContext from "../contexts/main/mainContext";
+import { CONTENT_TYPES } from "../constants";
 import { SNACKBAR_AUTO_HIDE_DURATION } from "../AppSettings";
+import SplitButton from "../components/customizedElements/SplitButton";
+import DisplayReport from "../components/reports/DisplayReport";
+import ReportedContentAnalysis from "../components/reports/ReportedContentAnalysis";
 
 const options = [
   "Most Recent",
@@ -27,124 +21,143 @@ const options = [
 ];
 
 const Reports = () => {
-  const [reports, setReports] = useState([]);
-  const { enqueueSnackbar } = useSnackbar();
+  // constants
+  const source = axios.CancelToken.source();
 
+  // state changes
+  const [reports, setReports] = useState([]);
+  const [reportsPageNumber, setReportsPageNumber] = useState(0);
+  const [reportsTotalPages, setReportsTotalPages] = useState(0);
+  const [isLoading, toggleLoading] = useState(false);
+  const { enqueueSnackbar } = useSnackbar();
+  const [displayContentData, setDisplayContentData] = useState({});
+  const [displayContentType, setDisplayContentType] = useState("");
+  const [selectedReportId, setSelectedReportId] = useState(null);
+
+  // events
   useEffect(() => {
-    if (!reports?.length)
-      (async () => {
-        const { isSuccess, errors, status, data } = await asyncRequestSender(
-          `${REPORT_ROUTE}`,
-          0
-        );
-        if (!isSuccess) {
+    toggleLoading(true);
+    axios
+      .get(`${REPORT_ROUTE}`, { cancelToken: source.token })
+      .then((response) => {
+        setReports(response.data.reports);
+        if (response.data.totalPages) {
+          setReportsTotalPages(response.data.totalPages);
+          setReportsPageNumber(1);
+        }
+      })
+      .catch((error) => {
+        if (axios.isCancel(error)) {
+          console.log("request canceled");
+        } else {
+          const { errors, status } = asyncRequestErrorHandler(error);
           errors.forEach((el) =>
             enqueueSnackbar(el, {
               variant: "error",
               autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
             })
           );
-        } else {
-          setReports(data.reports);
         }
-      })();
+      })
+      .finally(() => {
+        toggleLoading(false);
+      });
+
+    return () => {
+      toggleLoading(false);
+      source.cancel();
+    };
   }, []);
 
-  const [open, setOpen] = useState(false);
-  const anchorRef = useRef(null);
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  // action handlers
 
-  const handleClick = () => {
-    console.info(`You clicked ${options[selectedIndex]}`);
+  const handlePageChange = (event, pageNumber) => {
+    setReportsPageNumber(pageNumber);
   };
 
-  const handleMenuItemClick = (event, index) => {
-    setSelectedIndex(index);
-    setOpen(false);
-  };
+  const handleClickToViewContent = (contentType, contentId, reportId) => {
+    toggleLoading(true);
+    // different url formation based on resource
+    let url = `api/${
+      contentType === CONTENT_TYPES[1] ? contentType : contentType + "s"
+    }/${contentId}`;
 
-  const handleToggle = () => {
-    setOpen((prevOpen) => !prevOpen);
-  };
+    setSelectedReportId(reportId);
 
-  const handleClose = (event) => {
-    if (anchorRef.current && anchorRef.current.contains(event.target)) {
-      return;
-    }
-    setOpen(false);
+    axios
+      .get(url, { cancelToken: source.token })
+      .then((response) => {
+        setDisplayContentData(response.data);
+        setDisplayContentType(contentType);
+      })
+      .catch((error) => {
+        if (axios.isCancel(error)) {
+          console.log("request canceled");
+        } else {
+          const { errors, status } = asyncRequestErrorHandler(error);
+
+          errors.forEach((el) =>
+            enqueueSnackbar(el, {
+              variant: "error",
+              autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
+            })
+          );
+        }
+      })
+      .finally(() => {
+        toggleLoading(false);
+      });
   };
 
   return (
     <div className="reports-container">
-      <Grid container justify="space-around" spacing={2}>
+      <Grid container spacing={1}>
         <Grid container item xs={12} sm={6} md={6} lg={6} justify="flex-end">
-          <ButtonGroup
-            variant="contained"
-            color="primary"
-            ref={anchorRef}
-            aria-label="split button"
-          >
-            <Button variant="contained" onClick={handleClick}>
-              {options[selectedIndex]}
-            </Button>
-            <Button
-              color="primary"
-              size="small"
-              aria-controls={open ? "split-button-menu" : undefined}
-              aria-expanded={open ? "true" : undefined}
-              aria-label="select merge strategy"
-              aria-haspopup="menu"
-              onClick={handleToggle}
-            >
-              <ArrowDropDownIcon />
-            </Button>
-            <Popper
-              open={open}
-              anchorEl={anchorRef.current}
-              role={undefined}
-              transition
-              disablePortal
-            >
-              {({ TransitionProps, placement }) => (
-                <Grow
-                  {...TransitionProps}
-                  style={{
-                    transformOrigin:
-                      placement === "bottom" ? "center top" : "center bottom",
-                  }}
-                >
-                  <Paper>
-                    <ClickAwayListener onClickAway={handleClose}>
-                      <MenuList id="split-button-menu">
-                        {options.map((option, index) => (
-                          <MenuItem
-                            key={option}
-                            selected={index === selectedIndex}
-                            onClick={(event) =>
-                              handleMenuItemClick(event, index)
-                            }
-                          >
-                            {option}
-                          </MenuItem>
-                        ))}
-                      </MenuList>
-                    </ClickAwayListener>
-                  </Paper>
-                </Grow>
-              )}
-            </Popper>
-          </ButtonGroup>
+          <SplitButton
+            options={options}
+            selectedItemIndexChanged={(val) => {
+              console.log(val);
+            }}
+          />
         </Grid>
         <Grid container item sm={6} md={6} lg={6}></Grid>
       </Grid>
       <Grid container justify="space-around" spacing={2}>
         <Grid direction="column" container item xs={12} sm={6} md={6} lg={5}>
           {reports.map((el) => (
-            <div key={el._id}>{el.reason}</div>
+            <DisplayReport
+              key={el._id}
+              {...el}
+              handleClickToViewContent={handleClickToViewContent}
+              selectedReportId={selectedReportId}
+            />
           ))}
+          {reportsTotalPages !== 0 && reportsPageNumber !== 0 ? (
+            <Pagination
+              className="pagination"
+              count={reportsTotalPages}
+              page={reportsPageNumber}
+              onChange={handlePageChange}
+              shape="round"
+              size="medium"
+              color="primary"
+              showFirstButton
+              showLastButton
+            />
+          ) : (
+            <h2>No reports were found.</h2>
+          )}
         </Grid>
         <Grid direction="column" container item xs={12} sm={6} md={6} lg={5}>
-          blah
+          {!displayContentType ? (
+            <h3>Select a report to view reported content</h3>
+          ) : (
+            <ReportedContentAnalysis
+              displayContentType={displayContentType}
+              displayContentData={displayContentData}
+              selectedReportId={selectedReportId}
+            />
+          )}
         </Grid>
       </Grid>
     </div>

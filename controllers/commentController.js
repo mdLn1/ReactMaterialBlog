@@ -51,6 +51,22 @@ async function getComments(req, res) {
   res.status(200).json({ comments: commentsFound });
 }
 
+async function getCommentById(req, res) {
+  const { commentId } = req.params;
+
+  if (!commentId || typeof commentId !== "string")
+    throw new HttpError("Comment not found");
+
+  const foundComment = await Comment.findById(commentId).populate(
+    "author",
+    "name username _id "
+  );
+
+  if (!foundComment) throw new HttpError("Comment not found");
+
+  res.status(200).json(foundComment);
+}
+
 async function editComment(req, res) {
   const { content } = req.body;
   const { commentId } = req.params;
@@ -90,4 +106,4 @@ async function editComment(req, res) {
   res.status(200).json({ post: foundComment });
 }
 
-module.exports = { createComment, getComments, editComment };
+module.exports = { createComment, getComments, editComment, getCommentById };

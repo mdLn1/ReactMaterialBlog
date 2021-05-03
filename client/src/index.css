@@ -10,6 +10,7 @@
   --secondary: #1d3557;
   /* prussian-blue */
   --white: #fff;
+  --warning: #fff3b0;
 }
 
 
@@ -180,6 +181,10 @@ a:visited {
 
 .comment-header .comment-options i {
   font-size: .7rem;
+}
+
+.popper-split-button {
+  z-index: 2;
 }
 
 
@@ -443,7 +448,10 @@ p.error {
 .home-container .post-options .fas,
 .home-container .post-options .far,
 .comment .comment-header .comment-options .fas,
-.comment .comment-header .comment-options .far {
+.comment .comment-header .comment-options .far,
+.report .report-header .report-options .fas,
+.report .report-header .report-options .far,
+.reports-container .reported-element-container .reported-content-options .fas {
   color: gray;
 }
 
@@ -625,6 +633,35 @@ p.error {
   margin-top: -0.7rem;
 }
 
+.report .report-header .reason {
+  white-space: nowrap;
+  width: 55px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.report {
+  background-color: var(--white);
+  padding: .5rem 1rem;
+  margin: .5rem;
+  border-radius: .8rem;
+}
+
+.report.selected-report {
+  background-color: var(--warning);
+}
+
+.report .reason .contentType {
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-right: 1rem;
+}
+
+.report .reason .contentType:hover {
+  cursor: pointer;
+}
+
+
 .single-post-comments .comment-text,
 .report-text {
   border: 1px solid rgba(34, 36, 38, .15);
@@ -672,6 +709,10 @@ p.error {
   color: var(--secondary)
 }
 
+.MuiButtonGroup-grouped.MuiButtonGroup-groupedHorizontal.MuiButtonGroup-groupedContained {
+  z-index: 1;
+}
+
 .report-modal-body {
   position: absolute;
   width: 500px;
@@ -680,6 +721,41 @@ p.error {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%)
+}
+
+.reports-container .reported-element-container {
+  position: relative;
+  padding: 1rem 1.5rem;
+  border-radius: .5rem;
+  background-color: var(--white);
+}
+
+.reports-container .solutions {
+  padding: 1rem;
+  text-align: center;
+}
+
+.reports-container .solutions .solutions-content {
+  justify-content: center;
+}
+
+.reports-container .user-restriction-options {
+  padding: 0rem 1rem 0.8rem;
+}
+
+.reports-container .reported-element-container .reported-content-options {
+  position: absolute;
+  top: .5rem;
+  right: .5rem;
+
+}
+
+.reports-container .selected-reports-options {
+  padding: 1rem;
+}
+
+.reports-container .pagination {
+  margin: 0 auto;
 }
 
 /* #region media-queries */

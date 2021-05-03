@@ -4,7 +4,14 @@ let Schema = mongoose.Schema;
 let userSchema = new Schema({
   username: { type: String, required: true },
   password: { type: String },
-  userBlocked: { type: Boolean, default: false },
+  bans: [
+    {
+      reason: { type: String, required: true },
+      decisionDate: { type: Date, default: Date.now },
+      banLiftedDate: { type: Date, required: true },
+    },
+  ],
+  banEndDate: { type: Date },
   email: { type: String, required: true },
   displayEmail: { type: Boolean, default: false },
   name: { type: String },
@@ -36,6 +43,14 @@ userSchema.statics.isUsernameNotAvailable = async function (val) {
 
 userSchema.statics.isEmailAddressAlreadyUsed = async function (val) {
   return (await this.findOne({ email: new RegExp(val, "i") })) ? true : false;
+};
+
+userSchema.statics.isUserBanned = async function (userId) {
+  const foundUser = await this.findById(userId, "_id banEndDate");
+  if (foundUser.banEndDate && foundUser.banEndDate > new Date()) {
+    return true;
+  }
+  return false;
 };
 
 let userModel = mongoose.model("Users", userSchema);

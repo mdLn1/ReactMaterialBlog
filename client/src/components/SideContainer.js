@@ -2,12 +2,15 @@ import React, { useState, Fragment, useEffect, useContext } from "react";
 import { Button, Icon, Typography, Grid } from "@material-ui/core";
 import { useSnackbar } from "notistack";
 import { makeStyles } from "@material-ui/core/styles";
-import News from "./News";
+import axios from "axios";
+import News from "./news/News";
 import MainContext from "../contexts/main/mainContext";
 import { SNACKBAR_AUTO_HIDE_DURATION } from "../AppSettings";
-import asyncRequestSender from "../utils/asyncRequestSender";
+import {
+  asyncRequestErrorHandler,
+} from "../utils/asyncRequestHelper";
 import { NEWS_ROUTE } from "../httpRoutes";
-import NewQuickNews from "./NewQuickNews";
+import NewQuickNews from "./news/NewQuickNews";
 import ValidationTextField from "./customizedElements/ValidationTextField";
 import CustomContainedButton from "./customizedElements/CustomContainedButton";
 
@@ -28,27 +31,34 @@ const SideContainer = () => {
   const classes = useStyles();
   const mainContext = useContext(MainContext);
   const { enqueueSnackbar } = useSnackbar();
+  const source = axios.CancelToken.source();
 
   const { news, addNews } = mainContext;
 
   useEffect(() => {
     if (!news?.length)
-      (async () => {
-        const { isSuccess, errors, status, data } = await asyncRequestSender(
-          NEWS_ROUTE,
-          0
-        );
-        if (!isSuccess) {
+      axios
+      .get(`${NEWS_ROUTE}`, { cancelToken: source.token })
+      .then((response) => {
+        addNews(response.data.news);
+      })
+      .catch((error) => {
+        if (axios.isCancel(error)) {
+          console.log("request canceled");
+        } else {
+          const { errors, status } = asyncRequestErrorHandler(error);
           errors.forEach((el) =>
             enqueueSnackbar(el, {
               variant: "error",
               autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
             })
           );
-        } else {
-          addNews(data.news);
         }
-      })();
+      });
+
+    return () => {
+      source.cancel();
+    };
   }, []);
 
   const [isContactFormDisplayed, toggleContactFormDisplay] = useState(false);

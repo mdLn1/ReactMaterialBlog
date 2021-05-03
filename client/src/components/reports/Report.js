@@ -1,16 +1,19 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import Modal from "@material-ui/core/Modal";
-import MainContext from "../contexts/main/mainContext";
+import MainContext from "../../contexts/main/mainContext";
 import { useSnackbar } from "notistack";
-import { SNACKBAR_AUTO_HIDE_DURATION } from "../AppSettings";
-import asyncRequestSender from "../utils/asyncRequestSender";
-import { REPORT_ROUTE } from "../httpRoutes";
+import axios from "axios";
+import { SNACKBAR_AUTO_HIDE_DURATION } from "../../AppSettings";
+import { asyncRequestErrorHandler } from "../../utils/asyncRequestHelper";
+import { REPORT_ROUTE } from "../../httpRoutes";
 import { Icon, Grid, CircularProgress } from "@material-ui/core";
-import CustomContainedButton from "./customizedElements/CustomContainedButton";
-import { isReportReasonValid } from "../utils/customValidators";
-import { REPORT_REASON_ERROR } from "../utils/inputErrorMessages";
+import CustomContainedButton from "../customizedElements/CustomContainedButton";
+import { isReportReasonValid } from "../../utils/customValidators";
+import { REPORT_REASON_ERROR } from "../../utils/inputErrorMessages";
 
 const Report = () => {
+  const source = axios.CancelToken.source();
+
   const [reason, setReason] = useState("");
   let submissionButtonProps = { disabled: true };
   const [isLoading, toggleLoading] = useState(false);
@@ -22,52 +25,68 @@ const Report = () => {
   const { report, closeReport } = mainContext;
   const { enqueueSnackbar } = useSnackbar();
 
+  // events
+  useEffect(() => {
+    return () => {
+      toggleLoading(false);
+      source.cancel();
+    };
+  }, []);
+
+  // action handlers
   const handleClose = () => {
     setReason("");
     closeReport();
   };
 
-  // action handlers
   const handleReasonChange = ({ target: { value } }) => {
     setReason(value);
     toggleReasonError(!isReportReasonValid(value));
   };
 
-  const handleReportSubmit = async (e) => {
+  const handleReportSubmit = (e) => {
     e.preventDefault();
-    toggleLoading(true);
     if (isReportReasonValid(reason)) {
       const requestData = {
         reason: reason,
       };
-
-      const { isSuccess, errors, status, data } = await asyncRequestSender(
-        REPORT_ROUTE + report.contentType + "/" + report.contentId,
-        requestData,
-        1
-      );
-      if (isSuccess) {
-        enqueueSnackbar("Report submitted successfully", {
-          variant: "success",
-          autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
+      toggleLoading(true);
+      axios
+        .post(
+          REPORT_ROUTE + report.contentType + "/" + report.contentId,
+          requestData,
+          { cancelToken: source.token }
+        )
+        .then((response) => {
+          enqueueSnackbar("Report submitted successfully", {
+            variant: "success",
+            autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
+          });
+          handleClose();
+        })
+        .catch((error) => {
+          if (axios.isCancel(error)) {
+            console.log("request canceled");
+          } else {
+            const { errors, status } = asyncRequestErrorHandler(error);
+            if (status === 400) {
+              setResponseErrors(errors);
+            } else {
+              errors.forEach((el) =>
+                enqueueSnackbar(el, {
+                  variant: "error",
+                  autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
+                })
+              );
+            }
+          }
+        })
+        .finally(() => {
+          toggleLoading(false);
         });
-        handleClose();
-      } else {
-        if (status === 400) {
-          setResponseErrors(errors);
-        } else {
-          errors.forEach((el) =>
-            enqueueSnackbar(el, {
-              variant: "error",
-              autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
-            })
-          );
-        }
-      }
     } else {
       toggleReasonError(!isReportReasonValid(reason));
     }
-    toggleLoading(false);
   };
 
   if (isLoading || isReasonError) {

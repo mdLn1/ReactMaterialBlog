@@ -8,6 +8,7 @@ const {
   authenticationMiddleware,
   authorizationMiddleware,
   errorCheckerMiddleware,
+  userCreateContentMiddleware
 } = require("../middleware");
 const {
   isNewsContentValid,
@@ -22,12 +23,18 @@ const {
   deleteNews,
   editNews,
   getAllNews,
+  getNewsById,
 } = require("../controllers/newsController");
 
 //@route api/news/
 //@desc Get all the news
 //@access Public
 router.get("/", exceptionHandler(getAllNews));
+
+//@route api/news/:newsId
+//@desc Get the news by id
+//@access Public
+router.get("/:newsId", exceptionHandler(getNewsById));
 
 //@route api/news/
 //@desc Create news
@@ -43,6 +50,7 @@ router.post(
       .custom((val) => isNewsContentValid(val)),
     errorCheckerMiddleware,
     authenticationMiddleware,
+    asyncMiddlewareExceptionHandler(userCreateContentMiddleware),
     asyncMiddlewareExceptionHandler(authorizationMiddleware),
   ],
   exceptionHandler(createNews)
@@ -55,6 +63,7 @@ router.patch(
   "/:newsId",
   [
     authenticationMiddleware,
+    asyncMiddlewareExceptionHandler(userCreateContentMiddleware),
     asyncMiddlewareExceptionHandler(authorizationMiddleware),
   ],
   exceptionHandler(editNews)

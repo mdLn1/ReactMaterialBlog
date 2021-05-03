@@ -61,12 +61,30 @@ router.get("/google", addSocketIdToSession, googleAuth);
 router.post(
   "/login",
   [
-    check("email", "Invalid email address")
-      .trim()
-      .custom((val) => isEmailAddressValid(val)),
-    check("password", "Invalid password")
-      .trim()
-      .custom((val) => isPasswordValid(val)),
+    check(
+      "email",
+      "Invalid credentials, please make sure you typed everything correctly"
+    ).custom(
+      (
+        val,
+        {
+          req: {
+            body: { password },
+          },
+        }
+      ) => {
+        if (typeof val !== "string" || typeof password !== "string")
+          return false;
+
+        if (
+          !isEmailAddressValid(val.trim()) ||
+          !isPasswordValid(password.trim())
+        )
+          return false;
+
+        return true;
+      }
+    ),
     errorCheckerMiddleware,
   ],
   exceptionHandler(loginUser)
@@ -133,7 +151,7 @@ router.post(
   [
     check("username", "Please enter a username at least 4 characters long")
       .trim()
-      .custom((val) => val ? isUsernameValid(val) : true),
+      .custom((val) => (val ? isUsernameValid(val) : true)),
     check("email", "Please enter a valid email address")
       .trim()
       .custom((val) => isEmailAddressValid(val)),

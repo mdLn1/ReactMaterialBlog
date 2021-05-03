@@ -1,3 +1,7 @@
 const CONTENT_TYPES = ["post", "news", "comment"];
+const DEFAULT_DAYS_USER_CONTENT_CREATION_RESTRICTED = 10;
 
-module.exports = { CONTENT_TYPES };
+module.exports = {
+  CONTENT_TYPES,
+  DEFAULT_DAYS_USER_CONTENT_CREATION_RESTRICTED,
+};

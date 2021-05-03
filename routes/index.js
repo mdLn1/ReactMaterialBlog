@@ -5,4 +5,6 @@ module.exports = {
   exampleRoutes: require("./exampleRoutes"),
   newsRoutes: require("./newsRoutes"),
   reportRoutes: require("./reportRoutes"),
+  commentRoutes: require("./commentRoutes"),
+  userRoutes: require("./userRoutes"),
 };

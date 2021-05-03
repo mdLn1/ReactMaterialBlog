@@ -13,6 +13,8 @@ const {
   testRoutes,
   newsRoutes,
   reportRoutes,
+  commentRoutes,
+  userRoutes,
 } = require("./routes");
 const compression = require("compression");
 const helmet = require("helmet");
@@ -42,12 +44,8 @@ app.use(express.json({ extended: true, limit: "100kb" }));
 mongoConnect();
 app.use(passport.initialize());
 passportInit();
-
-app.use(
-  cors({
-    origin: CLIENT_ORIGIN,
-  })
-);
+if (process.env.NODE_ENV !== "production")
+  app.use(cors({ origin: CLIENT_ORIGIN }));
 
 app.use(
   session({
@@ -86,7 +84,12 @@ app.use("/api/news", apiLimiter, newsRoutes);
 
 app.use("/api/reports", apiLimiter, reportRoutes);
 
-app.use("/api", apiLimiter, testRoutes);
+app.use("/api/comments", apiLimiter, commentRoutes);
+
+app.use("/api/users", apiLimiter, userRoutes);
+
+if (process.env.NODE_ENV !== "production")
+  app.use("/api/test", apiLimiter, testRoutes);
 
 // middleware for a route
 // app.use("/api/users/login", apiLimiter, (req, res) => { return res.status(200).json({ message: "success" }) })
@@ -106,3 +109,5 @@ app.use((err, req, res, next) => {
 server.listen(process.env.PORT || 5000, () =>
   console.log(`Listening on port ${process.env.PORT || 5000}`)
 );
+
+module.exports = { app };

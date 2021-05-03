@@ -1,5 +1,5 @@
 // libraries
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { useSnackbar } from "notistack";
 import {
   Avatar,
@@ -19,6 +19,7 @@ import {
 import { Link, Redirect } from "react-router-dom";
 import LockOutlinedIcon from "@material-ui/icons/LockOutlined";
 import { makeStyles } from "@material-ui/core/styles";
+import axios from "axios";
 
 // project items
 import ValidationTextField from "../components/customizedElements/ValidationTextField";
@@ -37,7 +38,7 @@ import {
   CONFIRMED_PASSWORD_ERROR,
   USERNAME_ERROR,
 } from "../utils/inputErrorMessages";
-import asyncRequestSender from "../utils/asyncRequestSender";
+import { asyncRequestErrorHandler } from "../utils/asyncRequestHelper";
 import { SNACKBAR_AUTO_HIDE_DURATION } from "../AppSettings";
 
 // styling
@@ -70,6 +71,7 @@ export default function Register() {
   const { enqueueSnackbar } = useSnackbar();
   const mainContext = useContext(MainContext);
   const { user } = mainContext;
+  const source = axios.CancelToken.source();
 
   //fields
   let emailFieldProps = {};
@@ -95,6 +97,14 @@ export default function Register() {
   const [isEmailAddressError, toggleEmailAddressError] = useState(false);
   const [isUsernameError, toggleUsernameError] = useState(false);
   const [responseErrors, setResponseErrors] = useState([]);
+
+  // events
+  useEffect(() => {
+    return () => {
+      toggleLoading(false);
+      source.cancel();
+    };
+  }, []);
 
   // action handlers
 
@@ -133,36 +143,43 @@ export default function Register() {
         displayEmail,
         mailingSubscription: receiveUpdatesTicked,
       };
-
-      const { isSuccess, errors, status, data } = await asyncRequestSender(
-        AUTH_ROUTE + "register",
-        requestData,
-        1
-      );
-      if (isSuccess) {
-        enqueueSnackbar("An email was sent to the address provided.", {
-          variant: "success",
-          autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
+      toggleLoading(true);
+      axios
+        .post(AUTH_ROUTE + "register", requestData, {
+          cancelToken: source.token,
+        })
+        .then((response) => {
+          enqueueSnackbar("An email was sent to the address provided.", {
+            variant: "success",
+            autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
+          });
+        })
+        .catch((error) => {
+          if (axios.isCancel(error)) {
+            console.log("request canceled");
+          } else {
+            const { errors, status } = asyncRequestErrorHandler(error);
+            if (status === 400) {
+              setResponseErrors(errors);
+            } else {
+              errors.forEach((el) =>
+                enqueueSnackbar(el, {
+                  variant: "error",
+                  autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
+                })
+              );
+            }
+          }
+        })
+        .finally(() => {
+          toggleLoading(false);
         });
-      } else {
-        if (status === 400) {
-          setResponseErrors(errors);
-        } else {
-          errors.forEach((el) =>
-            enqueueSnackbar(el, {
-              variant: "error",
-              autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
-            })
-          );
-        }
-      }
     } else {
       toggleEmailAddressError(!isEmailAddressValid(emailAddress));
       togglePasswordError(!isPasswordValid(password));
       toggleUsernameError(!isUsernameValid(username));
       toggleConfirmedPasswordError(confirmedPassword !== password);
     }
-    toggleLoading(false);
   };
 
   // handling errors display

@@ -101,9 +101,8 @@ async function getPostById(req, res) {
   if (!postId || typeof postId !== "string")
     throw new HttpError("Post not found");
 
-  const foundPost = await Post.findById(postId, "-reports")
-    .populate("author", "name username _id ")
-    .populate("previousVersions");
+  const foundPost = await Post.findById(postId)
+    .populate("author", "name username _id ");
 
   if (!foundPost) throw new HttpError("Post not found");
 

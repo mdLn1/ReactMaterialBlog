@@ -15,6 +15,7 @@ const {
   authenticationMiddleware,
   authorizationMiddleware,
   errorCheckerMiddleware,
+  userCreateContentMiddleware
 } = require("../middleware");
 const {
   isPostContentValid,
@@ -31,7 +32,7 @@ const {
 router.get("/", exceptionHandler(getPosts));
 
 //@route api/posts/:postId
-//@desc Get all the posts
+//@desc Get a post by id
 //@access Public
 router.get("/:postId", exceptionHandler(getPostById));
 
@@ -49,6 +50,7 @@ router.post(
       .custom((val) => isPostContentValid(val)),
     errorCheckerMiddleware,
     authenticationMiddleware,
+    asyncMiddlewareExceptionHandler(userCreateContentMiddleware),
     asyncMiddlewareExceptionHandler(authorizationMiddleware),
   ],
   exceptionHandler(createPost)
@@ -61,6 +63,7 @@ router.patch(
   "/:postId",
   [
     authenticationMiddleware,
+    asyncMiddlewareExceptionHandler(userCreateContentMiddleware),
     asyncMiddlewareExceptionHandler(authorizationMiddleware),
   ],
   exceptionHandler(editPost)

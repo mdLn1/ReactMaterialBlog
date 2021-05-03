@@ -1,9 +1,9 @@
 import React, { Fragment, useContext } from "react";
 import PropTypes from "prop-types";
-import MultipleOptionsMenu from "./MultipleOptionsMenu";
+import MultipleOptionsMenu from "../customizedElements/MultipleOptionsMenu";
 import moment from "moment";
-import MainContext from "../contexts/main/mainContext";
-import { CONTENT_TYPES } from "../constants";
+import MainContext from "../../contexts/main/mainContext";
+import { CONTENT_TYPES } from "../../constants";
 
 const Comment = ({ _id, author, postedDate, content, edited }) => {
   const mainContext = useContext(MainContext);
@@ -49,13 +49,13 @@ const Comment = ({ _id, author, postedDate, content, edited }) => {
   );
 };
 Comment.propTypes = {
-  author: PropTypes.string.isRequired,
+  author: PropTypes.object.isRequired,
   content: PropTypes.string.isRequired,
   postedDate: PropTypes.string.isRequired,
 };
 
 Comment.defaultProps = {
-  author: "John Doe",
+  author: { username: "John Doe" },
   content: "default content comment content",
   postedDate: new Date().toUTCString(),
 };

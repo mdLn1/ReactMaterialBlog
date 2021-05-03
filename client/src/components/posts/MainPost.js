@@ -1,16 +1,16 @@
 import React, { Fragment, useState, useContext } from "react";
 import PropTypes from "prop-types";
 import ReactMarkdown from "react-markdown";
-import { containsMDImage } from "../utils/matchMDImagePattern";
+import { containsMDImage } from "../../utils/matchMDImagePattern";
 import { Link } from "react-router-dom";
 import Tooltip from "@material-ui/core/Tooltip";
-import MultipleOptionsMenu from "./MultipleOptionsMenu";
-import { secondary } from "../AppColors";
+import MultipleOptionsMenu from "../customizedElements/MultipleOptionsMenu";
+import { secondary } from "../../AppColors";
 import PostForm from "./PostForm";
 import moment from "moment";
-import MainContext from "../contexts/main/mainContext";
-import { CONTENT_TYPES } from "../constants";
-import { REPORT_REASON_ERROR } from "../utils/inputErrorMessages";
+import MainContext from "../../contexts/main/mainContext";
+import { CONTENT_TYPES } from "../../constants";
+import { REPORT_REASON_ERROR } from "../../utils/inputErrorMessages";
 
 const MainPost = ({
   title,

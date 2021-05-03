@@ -2,7 +2,7 @@ import React, { useState, useEffect, Fragment } from "react";
 import axios from "axios";
 import Avatar from "@material-ui/core/Avatar";
 import Button from "@material-ui/core/Button";
-import { Link, Redirect, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Grid from "@material-ui/core/Grid";
 import Box from "@material-ui/core/Box";
 import LockOutlinedIcon from "@material-ui/icons/LockOutlined";
@@ -24,8 +24,7 @@ import {
   PASSWORD_REGISTER_ERROR,
   CONFIRMED_PASSWORD_ERROR,
 } from "../utils/inputErrorMessages";
-import asyncRequestSender from "../utils/asyncRequestSender";
-import { SNACKBAR_AUTO_HIDE_DURATION } from "../AppSettings";
+import { asyncRequestErrorHandler } from "../utils/asyncRequestHelper";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -33,6 +32,7 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
+    textAlign: "center",
   },
   avatar: {
     margin: theme.spacing(1),
@@ -49,7 +49,8 @@ const useStyles = makeStyles((theme) => ({
 
 export default function PasswordReset() {
   const classes = useStyles();
-  const {enqueueSnackbar} = useSnackbar();
+  const source = axios.CancelToken.source();
+  const { enqueueSnackbar } = useSnackbar();
   let emailFieldProps = {};
   let passwordFieldProps = {};
   let confirmedPasswordFieldProps = {};
@@ -67,13 +68,23 @@ export default function PasswordReset() {
   const [passwordChanged, togglePasswordChanged] = useState(false);
   const [responseErrors, setResponseErrors] = useState([]);
 
+  // events
+
+  useEffect(() => {
+    return () => {
+      toggleLoading(false);
+      source.cancel();
+    };
+  }, []);
 
   let hash = "";
   if (window.location.href.includes("reset-password/")) {
     let arr = window.location.href.split("reset-password/");
-    if (arr.length == 2)
+    if (arr.length === 2)
       hash = window.location.href.split("reset-password/")[1];
   }
+
+  // action handlers
 
   const validateEmail = ({ target: { value } }) => {
     setEmailAddress(value);
@@ -102,7 +113,6 @@ export default function PasswordReset() {
     }
   };
   const resetPassword = async () => {
-    toggleLoading(true);
     if (
       isEmailAddressValid(emailAddress) &&
       isPasswordValid(password) &&
@@ -114,21 +124,32 @@ export default function PasswordReset() {
         password,
         confirmedPassword,
       };
-      const { isSuccess, errors, status, data } = await asyncRequestSender(
-        AUTH_ROUTE + "password-reset",
-        requestData,
-        1
-      );
-      if (isSuccess) {
-        enqueueSnackbar("You've changed your password.", { variant: "success" });
-        togglePasswordChanged(true);
-      } else {
-        if (status === 400) {
-          setResponseErrors(errors);
-        } else {
-          errors.forEach((el) => enqueueSnackbar(el, { variant: "error" }));
-        }
-      }
+      toggleLoading(true);
+      axios
+        .post(AUTH_ROUTE + "password-reset", requestData, {
+          cancelToken: source.token,
+        })
+        .then((response) => {
+          enqueueSnackbar("You've changed your password.", {
+            variant: "success",
+          });
+          togglePasswordChanged(true);
+        })
+        .catch((error) => {
+          if (axios.isCancel(error)) {
+            console.log("request canceled");
+          } else {
+            const { errors, status } = asyncRequestErrorHandler(error);
+            if (status === 400) {
+              setResponseErrors(errors);
+            } else {
+              errors.forEach((el) => enqueueSnackbar(el, { variant: "error" }));
+            }
+          }
+        })
+        .finally(() => {
+          toggleLoading(false);
+        });
     } else {
       if (!isPasswordValid(password)) {
         togglePasswordError(true);
@@ -142,7 +163,6 @@ export default function PasswordReset() {
         toggleConfirmedPasswordError(true);
       }
     }
-    toggleLoading(false);
   };
 
   if (isPasswordError) {

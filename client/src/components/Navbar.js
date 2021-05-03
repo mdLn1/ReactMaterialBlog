@@ -4,10 +4,11 @@ import { iconLinks } from "../AppSettings";
 import MainContext from "../contexts/main/mainContext";
 import { useSnackbar } from "notistack";
 import { SNACKBAR_AUTO_HIDE_DURATION } from "../AppSettings";
-import asyncRequestSender from "../utils/asyncRequestSender";
+import { asyncRequestErrorHandler } from "../utils/asyncRequestHelper";
 import setAuthToken from "../utils/setAuthToken";
 import { AUTH_ROUTE } from "../httpRoutes";
-import AccountMenu from "./AccountMenu";
+import AccountMenu from "./account/AccountMenu";
+import axios from "axios";
 
 const Navbar = () => {
   const mainContext = useContext(MainContext);
@@ -15,37 +16,44 @@ const Navbar = () => {
   const [isSidenavShowing, toggleSidenav] = useState(false);
   const { user, logout } = mainContext;
   const { enqueueSnackbar } = useSnackbar();
+  const source = axios.CancelToken.source();
 
   useEffect(() => {
     if (!user && localStorage.token) {
-      (async () => {
-        setAuthToken(localStorage.token);
-        const { isSuccess, errors, status, data } = await asyncRequestSender(
-          AUTH_ROUTE,
-          1
-        );
-        if (isSuccess) {
+      setAuthToken(localStorage.token);
+      axios
+        .get(`${AUTH_ROUTE}`, { cancelToken: source.token })
+        .then((response) => {
           enqueueSnackbar("You've been logged in.", {
             variant: "success",
             autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
           });
-          mainContext.login(data);
-        } else {
-          if (status === 401 || status === 400) {
-            localStorage.removeItem("token");
-            setAuthToken("");
+          mainContext.login(response.data);
+        })
+        .catch((error) => {
+          console.log(error);
+          if (axios.isCancel(error)) {
+            console.log("request canceled");
           } else {
-            errors.forEach((el) =>
-              enqueueSnackbar(el, {
-                variant: "error",
-                autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
-              })
-            );
+            const { errors, status } = asyncRequestErrorHandler(error);
+            if (status === 401 || status === 400) {
+              localStorage.removeItem("token");
+              setAuthToken("");
+            } else {
+              errors.forEach((el) =>
+                enqueueSnackbar(el, {
+                  variant: "error",
+                  autoHideDuration: SNACKBAR_AUTO_HIDE_DURATION,
+                })
+              );
+            }
           }
-        }
-      })();
+        });
     }
-  });
+    return () => {
+      source.cancel();
+    };
+  }, []);
 
   useEffect(() => {
     if (isSidenavShowing) {
